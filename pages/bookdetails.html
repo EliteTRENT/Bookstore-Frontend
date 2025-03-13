@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Details - Bookstore</title>
+    <link rel="stylesheet" href="../styles/styles.css"> <!-- Header CSS -->
+    <link rel="stylesheet" href="../styles/bookdetails.css"> <!-- Page-specific CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <!-- Header (unchanged from boilerplate) -->
+    <header>
+        <div class="logo">
+            <span class="book-icon">📖</span> Bookstore
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search...">
+        </div>
+        <div class="nav-icons">
+            <div class="icon-container">
+                <i class="fas fa-user"></i>
+                <span class="icon-label">Profile</span>
+            </div>
+            <div class="icon-container">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="icon-label">Cart</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Book Details Section -->
+    <section class="book-details">
+        <div class="book-container">
+            <!-- Book Image -->
+            <div class="book-image">
+                <img src="../assets/book-placeholder.jpg" alt="Book Cover">
+            </div>
+            <!-- Book Info -->
+            <div class="book-info">
+                <h1 class="book-title">Book Title</h1>
+                <p class="book-author">by Author Name</p>
+                <div class="book-rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <i class="far fa-star"></i>
+                    <span>(4.5 / 5)</span>
+                </div>
+                <p class="book-price">$19.99</p>
+                <p class="book-description">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                </p>
+                <!-- Action Buttons -->
+                <div class="book-actions">
+                    <button class="add-to-cart"><i class="fas fa-shopping-cart"></i> Add to Cart</button>
+                    <button class="add-to-wishlist"><i class="far fa-heart"></i> Add to Wishlist</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Feedback -->
+        <div class="feedback-section">
+            <h2>Leave Your Feedback</h2>
+            <form class="feedback-form">
+                <textarea placeholder="Write your feedback here..." required></textarea>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+
+        <!-- Customer Reviews -->
+        <div class="reviews-section">
+            <h2>Customer Reviews</h2>
+            <div class="review">
+                <p><strong>John Doe</strong> - <span>4.5 / 5</span></p>
+                <p>Great book, really enjoyed the storyline!</p>
+            </div>
+            <div class="review">
+                <p><strong>Jane Smith</strong> - <span>3.8 / 5</span></p>
+                <p>Good read, but the ending could be better.</p>
+            </div>
+        </div>
+    </section>
+
+    <script src="../js/bookdetails.js"></script>
+</body>
+</html>
