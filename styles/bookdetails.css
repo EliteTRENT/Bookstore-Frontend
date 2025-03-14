@@ -147,3 +147,60 @@
     font-size: 14px;
     color: #555;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .book-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .book-image img {
+        width: 200px;
+    }
+
+    .book-info {
+        text-align: center;
+    }
+
+    .book-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .add-to-cart, .add-to-wishlist {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .feedback-form textarea {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        flex-direction: column;
+        height: auto;
+        padding: 10px;
+    }
+
+    .logo {
+        margin-left: 0;
+        margin-bottom: 10px;
+    }
+
+    .search-bar {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
+
+    .nav-icons {
+        margin-right: 0;
+        gap: 30px;
+    }
+}
