@@ -8,7 +8,7 @@ function fetchBookDetails(bookId) {
         id: bookId,
         title: "The Iliad",
         author: "Homer",
-        price: 5.87, // Price in INR
+        price: 587, // Price in INR
         rating: calculateAverageRating(userRatings), // Initial average rating
         description: "An epic poem set during the Trojan War, The Iliad tells the story of the Greek hero Achilles and his conflict with King Agamemnon.",
         image: "https://m.media-amazon.com/images/I/5168DSbCuuL._SL500_.jpg",
