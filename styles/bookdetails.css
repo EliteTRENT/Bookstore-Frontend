@@ -35,8 +35,9 @@
     margin-bottom: 10px;
 }
 
-.book-rating i {
+.book-rating .stars i {
     color: #f1c40f; /* Gold star color */
+    margin-right: 3px; /* Add spacing between stars */
 }
 
 .book-rating span {

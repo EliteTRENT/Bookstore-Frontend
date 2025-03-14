@@ -39,7 +39,42 @@ function fetchBookDetails(bookId) {
         reviewsSection.appendChild(reviewDiv);
     });
 }
+// Function to render star ratings dynamically
+function renderStars(rating) {
+    const starsContainer = document.querySelector('.stars');
+    starsContainer.innerHTML = ''; // Clear existing stars
 
+    const fullStars = Math.floor(rating); // Number of full stars (e.g., 4 for 4.8)
+    const decimal = rating - fullStars; // Decimal part (e.g., 0.8 for 4.8)
+    const totalStars = 5; // Total number of stars to display
+
+    // Add full stars
+    for (let i = 0; i < fullStars; i++) {
+        const star = document.createElement('i');
+        star.classList.add('fas', 'fa-star');
+        starsContainer.appendChild(star);
+    }
+
+    // Add half star if decimal is between 0.3 and 0.7
+    if (decimal >= 0.3 && decimal <= 0.7) {
+        const halfStar = document.createElement('i');
+        halfStar.classList.add('fas', 'fa-star-half-alt');
+        starsContainer.appendChild(halfStar);
+    } else if (decimal > 0.7) {
+        // Treat as a full star if decimal is > 0.7
+        const fullStar = document.createElement('i');
+        fullStar.classList.add('fas', 'fa-star');
+        starsContainer.appendChild(fullStar);
+    }
+
+    // Add empty stars for the remaining slots
+    const starsAdded = fullStars + (decimal >= 0.3 ? 1 : 0);
+    for (let i = starsAdded; i < totalStars; i++) {
+        const emptyStar = document.createElement('i');
+        emptyStar.classList.add('far', 'fa-star');
+        starsContainer.appendChild(emptyStar);
+    }
+}
 // Fetch book details when the page loads
 const bookId = document.querySelector('.book-details').getAttribute('data-book-id');
 fetchBookDetails(bookId);
