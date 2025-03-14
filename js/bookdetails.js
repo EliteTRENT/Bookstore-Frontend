@@ -23,6 +23,9 @@ function fetchBookDetails(bookId) {
     document.querySelector('.book-price').textContent = `$${mockBookData.price.toFixed(2)}`;
     document.querySelector('.book-description').textContent = mockBookData.description;
 
+    // Update the browser title
+    document.title = `${mockBookData.title} - Bookstore`;
+
     // Update reviews
     const reviewsSection = document.querySelector('.reviews-section');
     reviewsSection.innerHTML = '<h2>Customer Reviews</h2>'; // Reset reviews
