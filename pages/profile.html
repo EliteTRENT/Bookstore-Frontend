@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Bookstore</title>
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/book--v1.png">
+    <link rel="stylesheet" href="../styles/styles.css"> <!-- Header CSS -->
+    <link rel="stylesheet" href="../styles/profile.css"> <!-- Page-specific CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <!-- Header (unchanged from boilerplate) -->
+    <header>
+        <div class="logo">
+            <span class="book-icon">📖</span> Bookstore
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search...">
+        </div>
+        <div class="nav-icons">
+            <div class="icon-container">
+                <i class="fas fa-user"></i>
+                <span class="icon-label">Profile</span>
+            </div>
+            <div class="icon-container">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="icon-label">Cart</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- User Profile Section -->
+    <section class="profile-container">
+        <div class="profile-box">
+            <h2>User Profile</h2>
+            <div class="profile-details">
+                <div class="detail-group">
+                    <label>Full Name:</label>
+                    <span class="detail-value" data-field="name">John Doe</span>
+                </div>
+                <div class="detail-group">
+                    <label>Email:</label>
+                    <span class="detail-value" data-field="email">john.doe@example.com</span>
+                </div>
+                <div class="detail-group">
+                    <label>Mobile Number:</label>
+                    <span class="detail-value" data-field="mobile">+91 9876543210</span>
+                </div>
+            </div>
+
+            <h3>Address Details</h3>
+            <div class="address-list">
+                <div class="address-item">
+                    <div class="detail-group">
+                        <label>Street:</label>
+                        <span class="detail-value" data-field="street1">123 Main Street</span>
+                    </div>
+                    <div class="detail-group">
+                        <label>City:</label>
+                        <span class="detail-value" data-field="city1">Mumbai</span>
+                    </div>
+                    <div class="detail-group">
+                        <label>State:</label>
+                        <span class="detail-value" data-field="state1">Maharashtra</span>
+                    </div>
+                    <div class="detail-group">
+                        <label>Zip Code:</label>
+                        <span class="detail-value" data-field="zip1">400001</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="edit-btn">Edit Profile</button>
+            <button class="add-address-btn">Add New Address</button>
+        </div>
+    </section>
+
+    <script src="../js/profile.js"></script>
+</body>
+</html>
