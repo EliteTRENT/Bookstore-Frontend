@@ -1,18 +1,17 @@
 // Mock user data (to be replaced with backend data)
 let userData = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    mobile: "+91 9876543210",
+    name: "Ved Prakash",
+    email: "Ved2002@gmail.com",
+    mobile: "+91 7888465372",
     addresses: [
         {
-            street: "123 Main Street",
-            city: "Mumbai",
-            state: "Maharashtra",
-            zip: "400001"
+            street: "Connaught Place Market",
+            city: "New Delhi",
+            state: "New Delhi",
+            zip: "100134"
         }
     ]
 };
-
 // Simulate authentication (to be replaced with real logic)
 const isAuthenticated = true; // Assume user is logged in for now
 
@@ -22,12 +21,14 @@ if (!isAuthenticated) {
 } else {
     // Initialize the page with user data
     function renderProfile() {
+        // Update personal details
         document.querySelectorAll('.detail-value[data-field="name"]').forEach(el => el.textContent = userData.name);
         document.querySelectorAll('.detail-value[data-field="email"]').forEach(el => el.textContent = userData.email);
         document.querySelectorAll('.detail-value[data-field="mobile"]').forEach(el => el.textContent = userData.mobile);
 
+        // Update addresses
         const addressList = document.querySelector('.address-list');
-        addressList.innerHTML = '';
+        addressList.innerHTML = ''; // Clear existing addresses
         userData.addresses.forEach((address, index) => {
             const addressItem = document.createElement('div');
             addressItem.classList.add('address-item');
@@ -80,6 +81,7 @@ if (!isAuthenticated) {
 
         // Save changes
         saveBtn.addEventListener('click', () => {
+            // Update userData with new values
             document.querySelectorAll('.edit-input').forEach(input => {
                 const field = input.dataset.field;
                 if (field.startsWith('name') || field.startsWith('email') || field.startsWith('mobile')) {
@@ -89,14 +91,13 @@ if (!isAuthenticated) {
                     const addressField = field.replace(/\d+/, '');
                     userData.addresses[index][addressField] = input.value;
                 }
-                const span = input.previousElementSibling;
-                span.textContent = input.value;
             });
 
-            // Clean up
+            // Clean up and re-render
             document.querySelector('.profile-box').classList.remove('edit-mode');
             document.querySelectorAll('.edit-input').forEach(el => el.remove());
             document.querySelectorAll('.save-btn, .cancel-btn').forEach(el => el.remove());
+            renderProfile(); // Re-render the entire profile to ensure consistency
         });
 
         // Cancel editing
