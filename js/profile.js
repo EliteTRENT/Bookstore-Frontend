@@ -12,6 +12,7 @@ let userData = {
         }
     ]
 };
+
 // Simulate authentication (to be replaced with real logic)
 const isAuthenticated = true; // Assume user is logged in for now
 
@@ -21,12 +22,24 @@ if (!isAuthenticated) {
 } else {
     // Initialize the page with user data
     function renderProfile() {
-        // Update personal details
-        document.querySelectorAll('.detail-value[data-field="name"]').forEach(el => el.textContent = userData.name);
-        document.querySelectorAll('.detail-value[data-field="email"]').forEach(el => el.textContent = userData.email);
-        document.querySelectorAll('.detail-value[data-field="mobile"]').forEach(el => el.textContent = userData.mobile);
+        // Render personal details
+        const profileDetails = document.querySelector('.profile-details');
+        profileDetails.innerHTML = `
+            <div class="detail-group">
+                <label>Full Name:</label>
+                <span class="detail-value" data-field="name">${userData.name}</span>
+            </div>
+            <div class="detail-group">
+                <label>Email:</label>
+                <span class="detail-value" data-field="email">${userData.email}</span>
+            </div>
+            <div class="detail-group">
+                <label>Mobile Number:</label>
+                <span class="detail-value" data-field="mobile">${userData.mobile}</span>
+            </div>
+        `;
 
-        // Update addresses
+        // Render addresses
         const addressList = document.querySelector('.address-list');
         addressList.innerHTML = ''; // Clear existing addresses
         userData.addresses.forEach((address, index) => {
