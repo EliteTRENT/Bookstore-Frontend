@@ -1,0 +1,449 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    font-size: 16px; /* Base font size for rem calculations */
+}
+
+/* Main Container */
+.bookstore-dash {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: 4rem; /* Prevent content from being hidden under fixed header */
+}
+
+/* Header */
+.bookstore-dash__header {
+    background-color: #a11f2d;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    position: fixed; /* Fix header at the top */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000; /* Ensure it stays above other content */
+}
+
+.bookstore-dash__logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bookstore-dash__logo i {
+    font-size: 1.5rem;
+}
+
+.bookstore-dash__search {
+    padding: 0.625rem;
+    width: 40%;
+    max-width: 100%; /* Ensure it doesn’t overflow */
+    border: none;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    margin: 0.5rem 0; /* Add margin for spacing when wrapped */
+}
+
+.bookstore-dash__icons {
+    display: flex;
+    gap: 1.5625rem;
+}
+
+.bookstore-dash__icon {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    background: none;
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.3s;
+}
+
+.bookstore-dash__icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.bookstore-dash__icon i {
+    font-size: 1.125rem;
+}
+
+/* Main Section */
+.bookstore-dash__main {
+    flex: 1;
+    padding: 1.875rem 3.125rem;
+    margin-top: 1rem; /* Optional spacing from fixed header */
+}
+
+/* Header Section */
+.bookstore-dash__header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.875rem;
+    flex-wrap: wrap; /* Allow wrapping */
+    gap: 1rem; /* Add gap for spacing */
+}
+
+.bookstore-dash__header-section h1 {
+    font-size: 1.75rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.bookstore-dash__sort {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    color: #333;
+    background-color: white;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Book Grid */
+.bookstore-dash__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns by default */
+    gap: 1.25rem;
+    max-width: 75rem;
+    margin: 0 auto;
+}
+
+/* Book Card */
+.bookstore-dash__book-card {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.5rem;
+    position: relative;
+    transition: box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.bookstore-dash__book-card:hover {
+    box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1);
+}
+
+/* Book Image Wrapper */
+.bookstore-dash__book-image-wrapper {
+    background-color: #e0e0e0; /* Grey background for image area */
+    padding: 0.9375rem;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    position: relative;
+}
+
+.bookstore-dash__book-image {
+    width: 100%;
+    height: 16.25rem;
+    max-height: 60vw; /* Limit height on smaller screens */
+    object-fit: contain;
+    border-radius: 0.25rem;
+}
+
+/* Quick View */
+.bookstore-dash__quick-view {
+    position: absolute;
+    top: 0.9375rem;
+    right: 0.9375rem;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.3125rem 0.625rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.bookstore-dash__book-card:hover .bookstore-dash__quick-view {
+    opacity: 1;
+}
+
+/* Book Details */
+.bookstore-dash__book-details {
+    padding: 0.9375rem;
+}
+
+.bookstore-dash__book-title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.3125rem;
+    color: #333;
+}
+
+.bookstore-dash__book-author {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 0.3125rem;
+}
+
+.bookstore-dash__book-rating {
+    font-size: 0.875rem;
+    margin-bottom: 0.3125rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3125rem;
+}
+
+.bookstore-dash__rating-value {
+    background-color: #28a745; /* Green background for rating */
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+}
+
+.bookstore-dash__rating-value i {
+    font-size: 0.625rem;
+}
+
+.bookstore-dash__review-count {
+    color: #666;
+}
+
+.bookstore-dash__book-price {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0;
+}
+
+.bookstore-dash__book-price del {
+    color: #999;
+    font-weight: 400;
+    font-size: 0.875rem;
+    margin-left: 0.3125rem;
+}
+
+.bookstore-dash__book-out-of-stock {
+    color: #e74c3c;
+    font-weight: 700;
+    font-size: 0.875rem;
+    margin-top: 0.3125rem;
+    text-transform: uppercase;
+}
+
+/* Pagination */
+.bookstore-dash__pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2.5rem;
+    gap: 1.25rem;
+}
+
+.bookstore-dash__pagination-btn {
+    background-color: #a11f2d;
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    color: white;
+    font-size: 1.125rem;
+}
+
+.bookstore-dash__pagination-btn i {
+    color: white;
+}
+
+.bookstore-dash__pagination-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.bookstore-dash__pagination-btn:disabled i {
+    color: #999;
+}
+
+.bookstore-dash__pagination-pages {
+    display: flex;
+    gap: 0.625rem;
+    font-size: 1rem;
+}
+
+.bookstore-dash__pagination-page {
+    padding: 0.3125rem 0.625rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.bookstore-dash__pagination-page.active {
+    background-color: #a11f2d;
+    color: white;
+}
+
+/* Footer */
+.bookstore-dash__footer {
+    background-color: #2a2a2a;
+    color: #ccc;
+    text-align: center;
+    padding: 0.9375rem;
+    font-size: 0.875rem;
+}
+
+/* Profile Dropdown */
+.bookstore-dash__profile-dropdown {
+    display: none;
+    position: absolute;
+    top: 80%; /* Position directly below header */
+    right: 2rem; /* Align with right edge of header */
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    min-width: 14rem;
+    padding: 1rem 0;
+}
+
+.bookstore-dash__profile-dropdown.active {
+    display: block;
+}
+
+.bookstore-dash__profile-item {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.bookstore-dash__profile-item:hover {
+    background-color: #ffebee;
+    color: #a11f2d;
+}
+
+.bookstore-dash__profile-item:first-child {
+    font-weight: 500;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.bookstore-dash__profile-item i {
+    font-size: 1rem;
+    color: #666;
+}
+
+.bookstore-dash__profile-item:hover i {
+    color: #a11f2d;
+}
+
+.bookstore-dash__profile-item.bookstore-dash__profile-logout {
+    color: #a11f2d;
+    font-weight: 500;
+    margin: 1rem 1.5rem 0;
+    border: 1px solid #a11f2d;
+    border-radius: 0.25rem;
+    text-align: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+}
+
+.bookstore-dash__profile-item.bookstore-dash__profile-logout:hover {
+    background-color: #a11f2d;
+    color: white;
+}
+
+.bookstore-dash__profile-item.bookstore-dash__profile-logout:hover i {
+    color: white;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 1024px) {
+    .bookstore-dash__grid {
+        grid-template-columns: repeat(3, 1fr); /* 3 columns for tablets */
+    }
+
+    .bookstore-dash__main {
+        padding: 1.25rem 2rem; /* Reduce padding */
+    }
+}
+
+@media (max-width: 768px) {
+    .bookstore-dash__grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns for smaller tablets */
+    }
+
+    .bookstore-dash__header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+    }
+
+    .bookstore-dash__search {
+        width: 100%; /* Full width on smaller screens */
+    }
+
+    .bookstore-dash__icons {
+        margin-top: 0.5rem;
+        gap: 1rem;
+    }
+
+    .bookstore-dash__profile-dropdown {
+        right: 1rem; /* Adjust position for smaller screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .bookstore-dash__grid {
+        grid-template-columns: 1fr; /* 1 column for mobile */
+    }
+
+    .bookstore-dash__header-section h1 {
+        font-size: 1.25rem; /* Smaller heading */
+    }
+
+    .bookstore-dash__sort {
+        width: 100%; /* Full width for dropdown */
+    }
+
+    .bookstore-dash__book-image {
+        height: 12rem; /* Reduce image height */
+    }
+
+    .bookstore-dash__pagination-btn {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1rem;
+    }
+
+    .bookstore-dash__profile-dropdown {
+        min-width: 12rem; /* Slightly narrower for mobile */
+        right: 0.5rem; /* Adjust position */
+    }
+}
