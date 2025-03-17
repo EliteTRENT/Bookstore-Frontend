@@ -1,4 +1,4 @@
-// Mock user data (to be replaced with backend data)
+// Mock user data
 let userData = {
     name: "Ved Prakash",
     email: "Ved2002@gmail.com",
@@ -13,16 +13,13 @@ let userData = {
     ]
 };
 
-// Simulate authentication (to be replaced with real logic)
-const isAuthenticated = true; // Assume user is logged in for now
+// Simulate authentication
+const isAuthenticated = true;
 
 if (!isAuthenticated) {
     alert("Please log in to view your profile.");
-    // window.location.href = '/login'; // Redirect to Login Page when integrated
 } else {
-    // Initialize the page with user data
     function renderProfile() {
-        // Render personal details
         const profileDetails = document.querySelector('.profile-details');
         profileDetails.innerHTML = `
             <div class="detail-group">
@@ -39,9 +36,8 @@ if (!isAuthenticated) {
             </div>
         `;
 
-        // Render addresses
         const addressList = document.querySelector('.address-list');
-        addressList.innerHTML = ''; // Clear existing addresses
+        addressList.innerHTML = '';
         userData.addresses.forEach((address, index) => {
             const addressItem = document.createElement('div');
             addressItem.classList.add('address-item');
@@ -67,11 +63,9 @@ if (!isAuthenticated) {
         });
     }
 
-    // Enable edit mode
     document.querySelector('.edit-btn').addEventListener('click', () => {
         document.querySelector('.profile-box').classList.add('edit-mode');
 
-        // Replace spans with inputs
         document.querySelectorAll('.detail-value').forEach(el => {
             const input = document.createElement('input');
             input.classList.add('edit-input');
@@ -81,7 +75,6 @@ if (!isAuthenticated) {
             el.style.display = 'none';
         });
 
-        // Add save and cancel buttons
         const buttonContainer = document.querySelector('.profile-box');
         const saveBtn = document.createElement('button');
         saveBtn.classList.add('save-btn');
@@ -92,9 +85,7 @@ if (!isAuthenticated) {
         buttonContainer.appendChild(saveBtn);
         buttonContainer.appendChild(cancelBtn);
 
-        // Save changes
         saveBtn.addEventListener('click', () => {
-            // Update userData with new values
             document.querySelectorAll('.edit-input').forEach(input => {
                 const field = input.dataset.field;
                 if (field.startsWith('name') || field.startsWith('email') || field.startsWith('mobile')) {
@@ -106,23 +97,20 @@ if (!isAuthenticated) {
                 }
             });
 
-            // Clean up and re-render
             document.querySelector('.profile-box').classList.remove('edit-mode');
             document.querySelectorAll('.edit-input').forEach(el => el.remove());
             document.querySelectorAll('.save-btn, .cancel-btn').forEach(el => el.remove());
-            renderProfile(); // Re-render the entire profile to ensure consistency
+            renderProfile();
         });
 
-        // Cancel editing
         cancelBtn.addEventListener('click', () => {
             document.querySelector('.profile-box').classList.remove('edit-mode');
             document.querySelectorAll('.edit-input').forEach(el => el.remove());
             document.querySelectorAll('.save-btn, .cancel-btn').forEach(el => el.remove());
-            renderProfile(); // Re-render original data
+            renderProfile();
         });
     });
 
-    // Add new address
     document.querySelector('.add-address-btn').addEventListener('click', () => {
         const newAddress = {
             street: `New Street ${userData.addresses.length + 1}`,
@@ -134,6 +122,30 @@ if (!isAuthenticated) {
         renderProfile();
     });
 
-    // Initial render
     renderProfile();
 }
+
+// Profile Dropdown Functionality
+const profileIcon = document.querySelector('#profileDropdownTrigger');
+const profileDropdown = document.createElement('div');
+profileDropdown.className = 'bookstore-dash__profile-dropdown';
+profileDropdown.innerHTML = `
+    <div class="bookstore-dash__profile-item">Hello User,</div>
+    <div class="bookstore-dash__profile-item"><i class="fas fa-user"></i> Profile</div>
+    <div class="bookstore-dash__profile-item"><i class="fas fa-shopping-bag"></i> My Orders</div>
+    <div class="bookstore-dash__profile-item"><i class="fas fa-heart"></i> My Wishlist</div>
+    <div class="bookstore-dash__profile-item bookstore-dash__profile-logout">Logout</div>
+`;
+
+document.querySelector('.bookstore-dash__header').appendChild(profileDropdown);
+
+profileIcon.addEventListener('click', (e) => {
+    e.preventDefault();
+    profileDropdown.classList.toggle('active');
+});
+
+document.addEventListener('click', (e) => {
+    if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
+        profileDropdown.classList.remove('active');
+    }
+});
