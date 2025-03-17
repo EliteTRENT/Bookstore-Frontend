@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Details - Bookstore</title>
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/book--v1.png">
+    <link rel="stylesheet" href="../styles/styles.css"> <!-- Header CSS -->
+    <link rel="stylesheet" href="../styles/bookdetails.css"> <!-- Page-specific CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <!-- Header (unchanged from boilerplate) -->
+    <header>
+        <div class="logo">
+            <span class="book-icon">📖</span> Bookstore
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search...">
+        </div>
+        <div class="nav-icons">
+            <div class="icon-container">
+                <i class="fas fa-user"></i>
+                <span class="icon-label">Profile</span>
+            </div>
+            <div class="icon-container">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="icon-label">Cart</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Book Details Section -->
+    <section class="book-details" data-book-id="123"> <!-- Added data-book-id -->
+        <div class="book-container">
+            <!-- Book Image -->
+            <div class="book-image">
+                <img src="https://m.media-amazon.com/images/I/5168DSbCuuL._SL500_.jpg" alt="Book Cover"> <!-- Aligned with JS mock data -->
+            </div>
+            <!-- Book Info -->
+            <div class="book-info">
+                <h1 class="book-title">The Iliad</h1> <!-- Aligned with JS mock data -->
+                <p class="book-author">by Homer</p> <!-- Aligned with JS mock data -->
+                <div class="book-rating">
+                    <span class="stars"></span>
+                    <span>(4.8 / 5)</span> <!-- Aligned with JS mock data -->
+                </div>
+                <p class="book-price">$12.99</p> <!-- Aligned with JS mock data -->
+                <p class="book-description">
+                    An epic poem set during the Trojan War, The Iliad tells the story of the Greek hero Achilles and his conflict with King Agamemnon.
+                </p> <!-- Aligned with JS mock data -->
+                <!-- Action Buttons -->
+                <div class="book-actions">
+                    <button class="add-to-cart"><i class="fas fa-shopping-cart"></i> Add to Cart</button>
+                    <button class="add-to-wishlist"><i class="far fa-heart"></i> Add to Wishlist</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Feedback -->
+    <div class="feedback-section">
+    <h2>Leave Your Feedback</h2>
+    <form class="feedback-form">
+        <div class="feedback-rating">
+            <span>Your Rating: </span>
+            <span class="feedback-stars"></span>
+            <span class="feedback-rating-value">(0 / 5)</span>
+        </div>
+        <textarea placeholder="Write your feedback here..." required></textarea>
+        <button type="submit">Submit</button>
+    </form>
+    </div>
+
+        <!-- Customer Reviews -->
+        <div class="reviews-section">
+            <h2>Customer Reviews</h2>
+            <div class="review">
+                <p><strong>Helen</strong> - <span>5.0 / 5</span></p> <!-- Aligned with JS mock data -->
+                <p>A timeless classic! The epic battles are thrilling.</p>
+            </div>
+            <div class="review">
+                <p><strong>Troy</strong> - <span>4.5 / 5</span></p> <!-- Aligned with JS mock data -->
+                <p>Loved the heroism, but it’s a bit dense at times.</p>
+            </div>
+        </div>
+    </section>
+
+    <script src="../js/bookdetails.js"></script>
+</body>
+</html>

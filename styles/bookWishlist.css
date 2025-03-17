@@ -1,0 +1,137 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #a71d31;
+  padding: 10px 20px;
+  color: white;
+  height: 60px; /* Matches the height in the image */
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 24px;
+  margin-left: 150px; /* Preserved from your file */
+}
+
+.book-icon {
+  margin-right: 8px;
+  font-size: 30px; /* Adjusted size of the book emoji/icon */
+}
+
+.search-bar {
+  width: 700px; /* Preserved from your file */
+  margin: 0 20px;
+}
+
+.search-bar input {
+  width: 70%; /* Adjusted from 100% to 70% as per your file */
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  color: #333;
+}
+
+.nav-icons {
+  display: flex;
+  gap: 60px; /* Preserved from your file */
+  margin-right: 200px; /* Preserved from your file */
+}
+
+.icon-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.icon-container i {
+  font-size: 18px; /* Size of the icons to match the second image */
+  color: white;
+  margin-bottom: 2px; /* Small gap between icon and text */
+}
+
+.icon-label {
+  font-size: 14px; /* Smaller text size for labels */
+  color: white;
+}
+
+/* Optional: Style the input placeholder to match the image */
+::-webkit-input-placeholder {
+  color: #888;
+}
+:-ms-input-placeholder {
+  color: #888;
+}
+::placeholder {
+  color: #888;
+}
+
+
+.wishlist-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - 100px); /* Adjusting for header */
+}
+
+.wishlist-container h2 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.wishlist-container p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.wishlist-icon {
+  position: relative;
+  font-size: 60px;
+  margin-bottom: 20px;
+}
+
+.wishlist-icon i {
+  font-size: 60px;
+  color: grey ;
+}
+
+.wishlist-heart {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  font-size: 35px;
+  color: lightcoral !important;
+}
+
+.login-btn {
+  background: transparent;
+  border: 2px solid #a71d31;
+  color: #a71d31;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.login-btn:hover {
+  background: #a71d31;
+  color: white;
+}
+
+/* Input Placeholder Styling */
+::placeholder {
+  color: #888;
+}
