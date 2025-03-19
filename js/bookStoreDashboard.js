@@ -14,7 +14,7 @@ const BASE_URL = 'http://127.0.0.1:3000';
 let debounceTimeout = null;
 let abortController = null;
 
-// Fetch Books from Backend (unchanged)
+// Fetch Books from Backend
 function fetchBooks(page = 1, sort = 'relevance') {
     if (abortController) {
         abortController.abort();
@@ -60,7 +60,7 @@ function fetchBooks(page = 1, sort = 'relevance') {
     });
 }
 
-// Fetch Search Suggestions (unchanged)
+// Fetch Search Suggestions
 function searchBooks(query) {
     if (abortController) {
         abortController.abort();
@@ -106,7 +106,7 @@ function searchBooks(query) {
     });
 }
 
-// Render Books to the Grid (updated)
+// Render Books to the Grid
 function renderBooks(books) {
     bookGrid.innerHTML = '';
     if (!books || books.length === 0) {
@@ -120,8 +120,6 @@ function renderBooks(books) {
         const quantity = parseInt(book.quantity, 10) || 0;
         const averageRating = parseFloat(book.average_rating) || 0;
         const totalReviews = parseInt(book.total_reviews) || 0;
-
-        // Use book_image directly from the backend as the full URL
         const imageUrl = book.book_image || 'https://via.placeholder.com/150';
 
         addBookToUI(
@@ -132,15 +130,26 @@ function renderBooks(books) {
             mrp,
             quantity,
             averageRating,
-            totalReviews
+            totalReviews,
+            book.id // Pass the book ID
         );
+    });
+
+    // Add event listeners to Quick View buttons
+    document.querySelectorAll('.bookstore-dash__quick-view').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const bookCard = e.target.closest('.bookstore-dash__book-card');
+            const bookId = bookCard.getAttribute('data-book-id');
+            window.location.href = `/pages/bookdetails.html?bookId=${bookId}`; // Redirect to book details page
+        });
     });
 }
 
-// Add a Book Card to the UI (unchanged)
-function addBookToUI(name, author, image, discounted_price, mrp, quantity, averageRating, totalReviews) {
+// Add a Book Card to the UI
+function addBookToUI(name, author, image, discounted_price, mrp, quantity, averageRating, totalReviews, bookId) {
     const bookCard = document.createElement('div');
     bookCard.className = 'bookstore-dash__book-card';
+    bookCard.setAttribute('data-book-id', bookId); // Add book ID as a data attribute
 
     bookCard.innerHTML = `
         <div class="bookstore-dash__book-image-wrapper">
@@ -162,7 +171,7 @@ function addBookToUI(name, author, image, discounted_price, mrp, quantity, avera
     bookGrid.appendChild(bookCard);
 }
 
-// Render Pagination (unchanged)
+// Render Pagination
 function renderPagination(pagination) {
     currentPage = pagination.current_page;
     const totalPages = pagination.total_pages;
@@ -212,7 +221,7 @@ function renderPagination(pagination) {
     };
 }
 
-// Event Listeners (unchanged)
+// Event Listeners
 searchInput.addEventListener('input', (e) => {
     const query = e.target.value.trim();
 
@@ -229,7 +238,7 @@ sortSelect.addEventListener('change', () => {
     fetchBooks(1, sortSelect.value);
 });
 
-// Profile Dropdown Functionality (unchanged)
+// Profile Dropdown Functionality
 const profileIcon = document.querySelector('#profileDropdownTrigger');
 const profileDropdown = document.createElement('div');
 profileDropdown.className = 'bookstore-dash__profile-dropdown';

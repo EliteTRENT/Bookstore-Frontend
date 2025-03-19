@@ -1,152 +1,157 @@
-// Track all user-submitted ratings for averaging
-let userRatings = [5.0, 4.5]; // Initial ratings from Helen and Troy
+const BASE_URL = 'http://127.0.0.1:3000'; // Ensure server is running at this address
 
-// Simulate fetching book data
+// Get book ID from URL query parameter
+const urlParams = new URLSearchParams(window.location.search);
+const bookId = urlParams.get('bookId');
+
+// DOM Elements
+const bookImage = document.getElementById('bookImage');
+const bookTitle = document.getElementById('bookTitle');
+const bookAuthor = document.getElementById('bookAuthor');
+const ratingValue = document.getElementById('ratingValue');
+const reviewCount = document.getElementById('reviewCount');
+const discountedPrice = document.getElementById('discountedPrice');
+const mrp = document.getElementById('mrp');
+const bookDetails = document.getElementById('bookDetails');
+const bookNameBreadcrumb = document.getElementById('bookNameBreadcrumb');
+const reviewsContainer = document.getElementById('reviewsContainer');
+const ratingStars = document.getElementById('ratingStars');
+
+// Fetch Book Details
 function fetchBookDetails(bookId) {
-    const mockBookData = {
-        id: bookId,
-        title: "The Iliad",
-        author: "Homer",
-        price: 587,
-        rating: calculateAverageRating(userRatings),
-        description: "An epic poem set during the Trojan War, The Iliad tells the story of the Greek hero Achilles and his conflict with King Agamemnon.",
-        image: "https://m.media-amazon.com/images/I/5168DSbCuuL._SL500_.jpg",
-        reviews: [
-            { user: "Helen", rating: 5.0, comment: "A timeless classic! The epic battles are thrilling." },
-            { user: "Troy", rating: 4.5, comment: "Loved the heroism, but it’s a bit dense at times." }
-        ]
-    };
+    fetch(`${BASE_URL}/api/v1/books/show/${bookId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('API Response:', data); // Debug: Log the full response
+        if (!data.book || !data.book.id) {
+            throw new Error(data.errors || 'Failed to retrieve book details');
+        }
+        renderBookDetails(data.book);
+    })
+    .catch(error => {
+        console.error('Error fetching book details:', error.message);
+        bookTitle.textContent = 'Error Loading Book';
+        bookDetails.textContent = `Error: ${error.message}`;
+        ratingValue.textContent = 'N/A';
+        reviewCount.textContent = '(0)';
+        discountedPrice.textContent = '0.00';
+        mrp.textContent = '0.00';
+    });
+}
 
-    document.querySelector('.book-image img').src = mockBookData.image;
-    document.querySelector('.book-title').textContent = mockBookData.title;
-    document.querySelector('.book-author').textContent = `by ${mockBookData.author}`;
-    document.querySelector('.book-rating span').textContent = `(${mockBookData.rating.toFixed(1)} / 5)`;
-    document.querySelector('.book-price').textContent = `₹${mockBookData.price.toFixed(2)}`;
-    document.querySelector('.book-description').textContent = mockBookData.description;
-    document.title = `${mockBookData.title} - Bookstore`;
+// Render Book Details
+function renderBookDetails(book) {
+    bookImage.src = book.book_image || 'https://via.placeholder.com/300x400/a52a2a/ffffff?text=' + encodeURIComponent(book.name || 'No Image');
+    bookImage.alt = book.name || 'Book Cover';
+    bookTitle.textContent = book.name || 'Unknown Title';
+    bookAuthor.textContent = `by ${book.author || 'Unknown Author'}`;
+    
+    // Handle rating (number)
+    const avgRating = typeof book.average_rating === 'number' ? book.average_rating : 0;
+    ratingValue.textContent = `${avgRating.toFixed(1)} ★`;
+    reviewCount.textContent = `(${book.total_reviews || 0})`;
+    
+    // Handle prices (strings to numbers)
+    const discountPrice = book.discounted_price ? parseFloat(book.discounted_price) : 0;
+    const originalPrice = book.mrp ? parseFloat(book.mrp) : 0;
+    discountedPrice.textContent = discountPrice.toFixed(2);
+    mrp.textContent = originalPrice.toFixed(2);
+    
+    bookDetails.textContent = book.book_details || 'No details available.';
+    bookNameBreadcrumb.textContent = book.name || 'Book';
 
-    renderBookStars(mockBookData.rating);
+    // Update rating stars
+    const rating = Math.round(avgRating);
+    ratingStars.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('span');
+        star.className = 'star';
+        star.textContent = i <= rating ? '★' : '☆';
+        if (i <= rating) star.classList.add('filled');
+        ratingStars.appendChild(star);
+    }
 
-    const reviewsSection = document.querySelector('.reviews-section');
-    reviewsSection.innerHTML = '<h2>Customer Reviews</h2>';
-    mockBookData.reviews.forEach(review => {
+    // Fetch and render reviews
+    fetchReviews(book.id);
+}
+
+// Fetch Reviews
+function fetchReviews(bookId) {
+    fetch(`${BASE_URL}/api/v1/reviews/${bookId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.reviews && Array.isArray(data.reviews)) {
+            renderReviews(data.reviews);
+        } else {
+            reviewsContainer.innerHTML = '<p>No reviews available.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching reviews:', error.message);
+        reviewsContainer.innerHTML = `<p>Error loading reviews: ${error.message}</p>`;
+    });
+}
+
+// Render Reviews
+function renderReviews(reviews) {
+    reviewsContainer.innerHTML = '';
+    reviews.forEach(review => {
         const reviewDiv = document.createElement('div');
-        reviewDiv.classList.add('review');
+        reviewDiv.className = 'review';
         reviewDiv.innerHTML = `
-            <p><strong>${review.user}</strong> - <span>${review.rating} / 5</span></p>
-            <p>${review.comment}</p>
+            <div class="reviewer">
+                <span class="reviewer-badge">${review.user_name ? review.user_name.slice(0, 2).toUpperCase() : 'AN'}</span>
+                <span class="reviewer-name">${review.user_name || 'Anonymous'}</span>
+            </div>
+            <div class="review-stars">
+                ${Array(5).fill(0).map((_, i) => `<span class="star${i < (review.rating || 0) ? ' filled' : ''}">★</span>`).join('')}
+            </div>
+            <div class="review-text">${review.comment || 'No comment provided.'}</div>
         `;
-        reviewsSection.appendChild(reviewDiv);
+        reviewsContainer.appendChild(reviewDiv);
     });
 }
 
-// Calculate average rating
-function calculateAverageRating(ratings) {
-    if (ratings.length === 0) return 0;
-    const sum = ratings.reduce((acc, rating) => acc + rating, 0);
-    return sum / ratings.length;
-}
-
-// Render stars for average rating
-function renderBookStars(rating) {
-    const starsContainer = document.querySelector('.stars');
-    if (!starsContainer) return;
-    starsContainer.innerHTML = '';
-
-    const fullStars = Math.floor(rating);
-    const decimal = rating - fullStars;
-    const totalStars = 5;
-
-    for (let i = 0; i < totalStars; i++) {
-        const star = document.createElement('i');
-        if (i < fullStars) {
-            star.classList.add('fas', 'fa-star');
-        } else if (i === fullStars && decimal >= 0.3 && decimal <= 0.7) {
-            star.classList.add('fas', 'fa-star-half-alt');
-        } else {
-            star.classList.add('far', 'fa-star');
-        }
-        starsContainer.appendChild(star);
-    }
-}
-
-// Render interactive feedback stars
-function renderFeedbackStars(rating) {
-    const starsContainer = document.querySelector('.feedback-stars');
-    if (!starsContainer) return;
-    starsContainer.innerHTML = '';
-
-    const totalStars = 5;
-
-    for (let i = 0; i < totalStars; i++) {
-        const star = document.createElement('i');
-        if (i < rating) {
-            star.classList.add('fas', 'fa-star');
-        } else {
-            star.classList.add('far', 'fa-star');
-        }
-
-        star.addEventListener('click', () => {
-            const newRating = i + 1;
-            document.querySelector('.feedback-rating-value').textContent = `(${newRating} / 5)`;
-            renderFeedbackStars(newRating);
-        });
-
-        starsContainer.appendChild(star);
-    }
-}
-
-// Fetch book details on load
-const bookId = document.querySelector('.book-details').getAttribute('data-book-id');
-fetchBookDetails(bookId);
-
-// Initialize feedback stars
-renderFeedbackStars(0);
-
-// Cart and wishlist actions
-document.querySelector('.add-to-cart').addEventListener('click', () => {
-    const bookTitle = document.querySelector('.book-title').textContent;
-    console.log(`Added to cart: ${bookTitle}`);
+// Event Listeners
+document.getElementById('addToBagBtn').addEventListener('click', () => {
+    alert('Add to Bag functionality not implemented yet.');
 });
 
-document.querySelector('.add-to-wishlist').addEventListener('click', () => {
-    const bookTitle = document.querySelector('.book-title').textContent;
-    console.log(`Added to wishlist: ${bookTitle}`);
+document.getElementById('wishlistBtn').addEventListener('click', () => {
+    alert('Wishlist functionality not implemented yet.');
 });
 
-// Feedback submission
-const reviewsSection = document.querySelector('.reviews-section');
-const feedbackForm = document.querySelector('.feedback-form');
-if (feedbackForm) {
-    feedbackForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const feedbackText = e.target.querySelector('textarea').value;
-        if (feedbackText.trim()) {
-            const ratingSpan = document.querySelector('.feedback-rating-value');
-            const userRating = ratingSpan ? parseFloat(ratingSpan.textContent.match(/\d+(\.\d+)?/)?.[0] || 0) : 0;
+document.getElementById('submitReviewBtn').addEventListener('click', () => {
+    const reviewText = document.getElementById('reviewInput').value.trim();
+    if (reviewText) {
+        alert('Review submission not implemented yet.');
+    } else {
+        alert('Please write a review before submitting.');
+    }
+});
 
-            const newReview = document.createElement('div');
-            newReview.classList.add('review');
-            newReview.innerHTML = `
-                <p><strong>You</strong> - <span>${userRating} / 5</span></p>
-                <p>${feedbackText}</p>
-            `;
-            reviewsSection.appendChild(newReview);
-
-            userRatings.push(userRating);
-            const averageRating = calculateAverageRating(userRatings);
-            document.querySelector('.book-rating span').textContent = `(${averageRating.toFixed(1)} / 5)`;
-            renderBookStars(averageRating);
-
-            e.target.reset();
-            renderFeedbackStars(0);
-            document.querySelector('.feedback-rating-value').textContent = `(0 / 5)`;
-        }
-    });
-}
-
-// Profile Dropdown Functionality
-const profileIcon = document.querySelector('#profileDropdownTrigger');
+// Profile Dropdown
+const profileIcon = document.getElementById('profileDropdownTrigger');
 const profileDropdown = document.createElement('div');
 profileDropdown.className = 'bookstore-dash__profile-dropdown';
 profileDropdown.innerHTML = `
@@ -156,8 +161,7 @@ profileDropdown.innerHTML = `
     <div class="bookstore-dash__profile-item"><i class="fas fa-heart"></i> My Wishlist</div>
     <div class="bookstore-dash__profile-item bookstore-dash__profile-logout">Logout</div>
 `;
-
-document.querySelector('.bookstore-dash__header').appendChild(profileDropdown);
+document.querySelector('.header').appendChild(profileDropdown);
 
 profileIcon.addEventListener('click', (e) => {
     e.preventDefault();
@@ -169,3 +173,15 @@ document.addEventListener('click', (e) => {
         profileDropdown.classList.remove('active');
     }
 });
+
+// Initial Fetch
+if (bookId) {
+    fetchBookDetails(bookId);
+} else {
+    bookTitle.textContent = 'No Book Selected';
+    bookDetails.textContent = 'Please select a book from the dashboard.';
+    ratingValue.textContent = 'N/A';
+    reviewCount.textContent = '(0)';
+    discountedPrice.textContent = '0.00';
+    mrp.textContent = '0.00';
+}

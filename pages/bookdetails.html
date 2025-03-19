@@ -3,74 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Details - Bookstore</title>
-    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/book--v1.png">
-    <link rel="stylesheet" href="../styles/bookdetails.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Bookstore - Book Details</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="../styles/bookdetails.css"> <!-- Updated to match your structure -->
 </head>
 <body>
-    <div class="bookstore-dash">
-        <!-- Header -->
-        <header class="bookstore-dash__header">
-            <div class="bookstore-dash__logo"><i class="fa-solid fa-book"></i> Bookstore</div>
-            <input type="text" class="bookstore-dash__search" placeholder="Search" id="searchInput">
-            <div class="bookstore-dash__icons">
-                <button class="bookstore-dash__icon" id="profileDropdownTrigger">
-                    <i class="fas fa-user"></i> User
-                </button>
-                <span class="bookstore-dash__icon"><i class="fas fa-shopping-cart"></i> Cart</span>
+    <div class="header">
+        <div class="logo">
+            <i class="fa-solid fa-book logo-icon"></i> Bookstore
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search..." id="searchInput">
+        </div>
+        <div class="user-actions">
+            <div class="profile" id="profileDropdownTrigger">
+                <i class="fas fa-user icon"></i> User
             </div>
-        </header>
-
-        <!-- Book Details Section -->
-        <section class="book-details" data-book-id="123">
-            <div class="book-container">
-                <div class="book-image">
-                    <img src="https://m.media-amazon.com/images/I/5168DSbCuuL._SL500_.jpg" alt="Book Cover">
-                </div>
-                <div class="book-info">
-                    <h1 class="book-title">The Iliad</h1>
-                    <p class="book-author">by Homer</p>
-                    <div class="book-rating">
-                        <span class="stars"></span>
-                        <span>(4.8 / 5)</span>
-                    </div>
-                    <p class="book-price">$12.99</p>
-                    <p class="book-description">
-                        An epic poem set during the Trojan War, The Iliad tells the story of the Greek hero Achilles and his conflict with King Agamemnon.
-                    </p>
-                    <div class="book-actions">
-                        <button class="add-to-cart"><i class="fas fa-shopping-cart"></i> Add to Cart</button>
-                        <button class="add-to-wishlist"><i class="far fa-heart"></i> Add to Wishlist</button>
-                    </div>
-                </div>
+            <div class="cart">
+                <i class="fas fa-shopping-cart icon"></i> Cart
             </div>
+        </div>
+    </div>
 
+    <div class="breadcrumb" id="breadcrumb">
+        <a href="../pages/bookStoreDashboard.html">Home</a> / <span id="bookNameBreadcrumb">Book</span>
+    </div>
+
+    <div class="book-container">
+        <div class="book-gallery">
+            <img class="main-image" id="bookImage" src="" alt="Book Cover">
+            <div class="thumbnails" id="thumbnails">
+                <!-- Thumbnails can be added dynamically if multiple images are available -->
+            </div>
+            <div class="action-buttons">
+                <button class="add-to-bag" id="addToBagBtn">ADD TO BAG</button>
+                <button class="wishlist" id="wishlistBtn"><i class="fas fa-heart wishlist-icon"></i> WISHLIST</button>
+            </div>
+        </div>
+
+        <div class="book-info">
+            <h1 class="book-title" id="bookTitle">Loading...</h1>
+            <div class="book-author" id="bookAuthor">by Author</div>
+            
+            <div class="rating">
+                <span class="rating-value" id="ratingValue">0 ★</span>
+                <span class="review-count" id="reviewCount">(0)</span>
+            </div>
+            
+            <div class="price" id="price">
+                Rs.<span id="discountedPrice">0</span> <span class="original-price">Rs.<span id="mrp">0</span></span>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="book-detail">
+                <h3>Book Detail</h3>
+                <p id="bookDetails">Loading book details...</p>
+            </div>
+            
+            <div class="divider"></div>
+            
             <div class="feedback-section">
-                <h2>Leave Your Feedback</h2>
-                <form class="feedback-form">
-                    <div class="feedback-rating">
-                        <span>Your Rating: </span>
-                        <span class="feedback-stars"></span>
-                        <span class="feedback-rating-value">(0 / 5)</span>
+                <h3>Customer Feedback</h3>
+                
+                <div>
+                    <div>Overall rating</div>
+                    <div class="stars" id="ratingStars">
+                        <span class="star">☆</span>
+                        <span class="star">☆</span>
+                        <span class="star">☆</span>
+                        <span class="star">☆</span>
+                        <span class="star">☆</span>
                     </div>
-                    <textarea placeholder="Write your feedback here..." required></textarea>
-                    <button type="submit">Submit</button>
-                </form>
-            </div>
-
-            <div class="reviews-section">
-                <h2>Customer Reviews</h2>
-                <div class="review">
-                    <p><strong>Helen</strong> - <span>5.0 / 5</span></p>
-                    <p>A timeless classic! The epic battles are thrilling.</p>
+                    <textarea class="review-input" id="reviewInput" placeholder="Write your review"></textarea>
+                    <button class="submit-button" id="submitReviewBtn">Submit</button>
                 </div>
-                <div class="review">
-                    <p><strong>Troy</strong> - <span>4.5 / 5</span></p>
-                    <p>Loved the heroism, but it’s a bit dense at times.</p>
+                
+                <div style="clear: both;"></div>
+                
+                <div class="reviews" id="reviewsContainer">
+                    <!-- Reviews will be dynamically added here -->
                 </div>
             </div>
-        </section>
+        </div>
     </div>
 
     <script src="../js/bookdetails.js"></script>
