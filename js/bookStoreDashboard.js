@@ -262,7 +262,7 @@ function updateProfileUI() {
       <div class="bookstore-dash__profile-item">Hello, ${userName}</div>
       <div class="bookstore-dash__profile-item"><i class="fas fa-user"></i> Profile</div>
       <div class="bookstore-dash__profile-item"><i class="fas fa-shopping-bag"></i> My Orders</div>
-      <div class="bookstore-dash__profile-item"><i class="fas fa-heart"></i> My Wishlist</div>
+      <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
       <div class="bookstore-dash__profile-item bookstore-dash__profile-logout">Logout</div>
     `;
 
@@ -276,6 +276,14 @@ function updateProfileUI() {
         profileDropdown.classList.remove("active");
       }
     });
+
+    // Add event listener for My Wishlist navigation
+    const wishlistItem = profileDropdown.querySelector(".bookstore-dash__profile-wishlist");
+    if (wishlistItem) {
+      wishlistItem.addEventListener("click", () => {
+        window.location.href = "../pages/bookWishlist.html";
+      });
+    }
 
     // Logout functionality
     profileDropdown.querySelector(".bookstore-dash__profile-logout").addEventListener("click", () => {

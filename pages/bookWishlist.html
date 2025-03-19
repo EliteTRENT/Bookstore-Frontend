@@ -21,15 +21,36 @@
             </div>
         </header>
 
-        <div class="wishlist-container">
-            <h2>PLEASE LOG IN</h2>
-            <p>Login to view items in your wishlist.</p>
-            <div class="wishlist-icon">
-                <i class="fa-regular fa-file-lines"></i>
-                <i class="fa-solid fa-heart wishlist-heart"></i>
-            </div>
-            <button class="login-btn">LOGIN/SIGNUP</button>
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a href="../pages/bookStoreDashboard.html">Home</a>
+            <span>/</span>
+            <a href="./bookWishlist.html">My Wishlist</a>
         </div>
+
+        <div class="wishlist-container" id="wishlistContainer">
+            <!-- Login Prompt -->
+            <div id="loginPrompt" class="wishlist-empty" style="display: none;">
+                <h2>PLEASE LOG IN</h2>
+                <p>Login to view items in your wishlist.</p>
+                <div class="wishlist-icon">
+                    <i class="fa-regular fa-file-lines"></i>
+                    <i class="fa-solid fa-heart wishlist-heart"></i>
+                </div>
+                <button id="loginBtn" class="login-btn">LOGIN/SIGNUP</button>
+            </div>
+            
+            <!-- Wishlist Items -->
+            <div id="wishlistItems" style="display: none;">
+                <h2 id="wishlistTitle">My Wishlist (0)</h2>
+                <div id="wishlistBooks"></div>
+            </div>
+        </div>
+
+        <!-- Footer (Updated to match Dashboard) -->
+        <footer class="bookstore-dash__footer">
+            <p>Copyright © 2020, Bookstore Private LTD. All Rights Reserved</p>
+        </footer>
     </div>
 
     <script src="../js/bookWishlist.js"></script>

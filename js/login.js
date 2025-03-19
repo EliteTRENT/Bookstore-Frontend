@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       const result = await response.json();
-
+      console.log(result);
       if (!response.ok) {
         let errorMessage = "Login failed due to an unknown error";
         if (result && result.errors) {
@@ -102,6 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Store user_id and user_name in local storage
       localStorage.setItem('user_id', result.user_id);
       localStorage.setItem('user_name', result.user_name);
+      localStorage.setItem('token', result.token);
 
       alert(result.message || "Login successful!");
       loginForm.reset();
