@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const togglePassword = document.querySelector(".toggle-password");
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|ask)\.[a-zA-Z]{2,}$/;
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!#%*?&])[A-Za-z\d@$!%#*?&]{8,}$/;
 
   function validateField(field, regex, emptyMessage, invalidMessage) {
     field.addEventListener("input", () => {
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       alert(result.message || "Login successful!");
       loginForm.reset();
-      window.location.href = "dashboard.html";
+      window.location.href = "bookStoreDashboard.html";
     } catch (error) {
       alert(error.message);
     } finally {

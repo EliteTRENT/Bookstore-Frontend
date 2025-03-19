@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cart - Bookstore</title>
+    <link rel="stylesheet" href="../styles/mycart.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">📖 Bookstore</div>
+            <div class="search-bar">
+                <input type="text" placeholder="Search...">
+            </div>
+            <div class="user-actions">
+                <a href="#">Profile</a>
+                <a href="#">Cart 🛒</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="breadcrumb">Home / My cart</div>
+        <div class="cart-container">
+            <h2>My cart (1)</h2>
+            <div class="location-dropdown">
+                <select>
+                    <option>Use current location</option>
+                </select>
+            </div>
+            <div class="cart-item">
+                <img src="https://via.placeholder.com/100x150" alt="Don't Make Me Think by Steve Krug">
+                <div class="item-details">
+                    <h3>Don't Make Me Think</h3>
+                    <p>by Steve Krug</p>
+                    <p class="price">Rs. 1500 <span class="original-price">Rs. 2000</span></p>
+                    <div class="quantity">
+                        <button>-</button>
+                        <input type="number" value="1" min="1">
+                        <button>+</button>
+                    </div>
+                    <button class="remove">Remove</button>
+                </div>
+            </div>
+            <button class="place-order">PLACE ORDER</button>
+            <div class="address-details">
+                <h3>Address Details</h3>
+                <textarea placeholder="Enter your address..."></textarea>
+            </div>
+            <div class="order-summary">
+                <h3>Order Summary</h3>
+                <!-- Summary content can be added later -->
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Copyright © 2020. Bookstore Private Limited. All Rights Reserved</p>
+    </footer>
+</body>
+</html>
