@@ -99,6 +99,10 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error(errorMessage);
       }
 
+      // Store user_id and user_name in local storage
+      localStorage.setItem('user_id', result.user_id);
+      localStorage.setItem('user_name', result.user_name);
+
       alert(result.message || "Login successful!");
       loginForm.reset();
       window.location.href = "bookStoreDashboard.html";

@@ -11,22 +11,24 @@ body {
     color: #333;
 }
 
-/* Header */
-.header {
+/* Header (Matched with bookStoreDashboard.css) */
+.bookstore-dash__header {
     background-color: #a11f2d;
+    color: white;
     padding: 1rem 2rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    color: white;
-    position: fixed;
+    box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    position: fixed; /* Fix header at the top */
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1000;
+    z-index: 1000; /* Ensure it stays above other content */
 }
 
-.logo {
+.bookstore-dash__logo {
     font-size: 1.5rem;
     font-weight: 700;
     display: flex;
@@ -34,29 +36,26 @@ body {
     gap: 0.5rem;
 }
 
-.logo-icon {
+.bookstore-dash__logo i {
     font-size: 1.5rem;
 }
 
-.search-bar {
-    flex-grow: 1;
-    margin: 0 2rem;
-}
-
-.search-bar input {
-    width: 100%;
+.bookstore-dash__search {
     padding: 0.625rem;
+    width: 40%;
+    max-width: 100%; /* Ensure it doesn’t overflow */
     border: none;
     border-radius: 0.25rem;
     font-size: 1rem;
+    margin: 0.5rem 0; /* Add margin for spacing when wrapped */
 }
 
-.user-actions {
+.bookstore-dash__icons {
     display: flex;
     gap: 1.5625rem;
 }
 
-.profile, .cart {
+.bookstore-dash__icon {
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -71,11 +70,11 @@ body {
     transition: background-color 0.3s;
 }
 
-.profile:hover, .cart:hover {
+.bookstore-dash__icon:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-.icon {
+.bookstore-dash__icon i {
     font-size: 1.125rem;
 }
 
@@ -86,7 +85,7 @@ body {
     font-size: 0.875rem;
     color: #666;
     border-bottom: 1px solid #eee;
-    margin-top: 4rem; /* Space for fixed header */
+    margin-top: 5rem; /* Space for fixed header */
 }
 
 .breadcrumb a {
@@ -126,6 +125,7 @@ body {
 .action-buttons {
     display: flex;
     margin-top: 1.25rem;
+    margin-left: 5em;
 }
 
 .add-to-bag {
@@ -243,6 +243,24 @@ body {
     color: #FFD700;
 }
 
+.rating-input {
+    display: flex;
+    margin-bottom: 0.9375rem;
+}
+
+.rating-input .star {
+    font-size: 1.5rem;
+    color: #ddd;
+    margin-right: 0.3125rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.rating-input .star:hover,
+.rating-input .star.filled {
+    color: #FFD700;
+}
+
 .review-input {
     width: 100%;
     padding: 0.625rem;
@@ -250,6 +268,7 @@ body {
     border-radius: 0.25rem;
     margin-bottom: 0.625rem;
     resize: none;
+    outline: none;
 }
 
 .submit-button {
@@ -268,6 +287,7 @@ body {
     padding: 0.9375rem;
     background-color: #f9f9f9;
     border-radius: 0.25rem;
+    position: relative; /* For positioning delete button */
 }
 
 .reviewer {
@@ -299,7 +319,24 @@ body {
     color: #777;
 }
 
-/* Profile Dropdown (Reused from dashboard) */
+.delete-review-btn {
+    background-color: #a11f2d;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    float: right;
+    font-size: 0.875rem;
+    transition: background-color 0.3s;
+}
+
+.delete-review-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* Profile Dropdown */
 .bookstore-dash__profile-dropdown {
     display: none;
     position: absolute;
@@ -384,19 +421,23 @@ body {
         margin-bottom: 1.25rem;
     }
 
-    .header {
+    .bookstore-dash__header {
         flex-direction: column;
+        align-items: flex-start;
         padding: 1rem;
     }
 
-    .search-bar {
-        margin: 0.5rem 0;
-        width: 100%;
+    .bookstore-dash__search {
+        width: 100%; /* Full width on smaller screens */
     }
 
-    .user-actions {
+    .bookstore-dash__icons {
         margin-top: 0.5rem;
         gap: 1rem;
+    }
+
+    .bookstore-dash__profile-dropdown {
+        right: 1rem; /* Adjust position for smaller screens */
     }
 }
 
@@ -411,5 +452,10 @@ body {
 
     .main-image {
         height: 15rem;
+    }
+
+    .bookstore-dash__profile-dropdown {
+        min-width: 12rem; /* Slightly narrower for mobile */
+        right: 0.5rem; /* Adjust position */
     }
 }
