@@ -9,7 +9,7 @@ const wishlistTitle = document.getElementById("wishlistTitle");
 const loginBtn = document.getElementById("loginBtn");
 const profileIcon = document.getElementById("profileDropdownTrigger");
 
-// Profile Dropdown Functionality
+// Profile Dropdown Functionality 
 function setupProfileDropdown() {
     const userName = localStorage.getItem("user_name") || "User";
     const firstName = userName.split(" ")[0];
@@ -223,7 +223,7 @@ function deleteWishlistItem(wishlistId) {
     console.log("Wishlist ID:", wishlistId);
 
     if (!token || !userId) {
-        console.log("User not logged in. Redirecting to login page.");
+        console.log("User is not logged in. Redirecting to login page.");
         alert("Please log in to remove items from your wishlist.");
         window.location.href = "../pages/login.html";
         return;
