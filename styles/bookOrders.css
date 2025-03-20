@@ -1,0 +1,450 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    font-size: 16px;
+}
+
+/* Main Container */
+.bookstore-dash {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: 4rem;
+}
+
+/* Header */
+.bookstore-dash__header {
+    background-color: #a11f2d;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.bookstore-dash__logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bookstore-dash__logo i {
+    font-size: 1.5rem;
+}
+
+.bookstore-dash__search {
+    padding: 0.625rem;
+    width: 40%;
+    max-width: 100%;
+    border: none;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    margin: 0.5rem 0;
+}
+
+.bookstore-dash__icons {
+    display: flex;
+    gap: 1.5625rem;
+}
+
+.bookstore-dash__icon {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    background: none;
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.3s;
+}
+
+.bookstore-dash__icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.bookstore-dash__icon i {
+    font-size: 1.125rem;
+}
+
+/* Profile Dropdown */
+.bookstore-dash__profile-dropdown {
+    display: none;
+    position: absolute;
+    top: 80%;
+    right: 2rem;
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    min-width: 14rem;
+    padding: 1rem 0;
+}
+
+.bookstore-dash__profile-dropdown.active {
+    display: block;
+}
+
+.bookstore-dash__profile-item {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.bookstore-dash__profile-item:hover {
+    background-color: #ffebee;
+    color: #a11f2d;
+}
+
+.bookstore-dash__profile-item:first-child {
+    font-weight: 500;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.bookstore-dash__profile-item i {
+    font-size: 1rem;
+    color: #666;
+}
+
+.bookstore-dash__profile-item:hover i {
+    color: #a11f2d;
+}
+
+.bookstore-dash__profile-item.bookstore-dash__profile-logout {
+    color: #a11f2d;
+    font-weight: 500;
+    margin: 1rem 1.5rem 0;
+    border: 1px solid #a11f2d;
+    border-radius: 0.25rem;
+    text-align: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+}
+
+.bookstore-dash__profile-item.bookstore-dash__profile-logout:hover {
+    background-color: #a11f2d;
+    color: white;
+}
+
+.bookstore-dash__profile-item.bookstore-dash__profile-logout:hover i {
+    color: white;
+}
+
+/* Breadcrumbs */
+.breadcrumb {
+    display: flex;
+    padding: 1rem 2rem;
+    font-size: 0.875rem;
+    background-color: white;
+    border-bottom: 1px solid #eee;
+    margin-top: 1rem;
+}
+
+.breadcrumb a {
+    color: #666;
+    text-decoration: none;
+}
+
+.breadcrumb span {
+    margin: 0 0.5rem;
+    color: #666;
+}
+
+/* Orders Styles */
+.orders-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.orders-container h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    padding: 0.5rem;
+    background-color: #f9f9f9;
+    border-radius: 0.25rem;
+}
+
+.orders-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 0;
+    text-align: center;
+    background-color: #f9f9f9;
+}
+
+.orders-icon {
+    position: relative;
+    margin: 1.5rem 0 2rem 0;
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    left: 4.5rem;
+}
+
+.orders-icon i.fa-box {
+    position: absolute;
+    font-size: 2.4rem;
+    color: #d9d9d9;
+    left: 100%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.orders-receipt {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    font-size: 1.4rem;
+    color: #a11f2d !important;
+}
+
+.login-btn {
+    background: transparent;
+    border: 1px solid #a11f2d;
+    color: #a11f2d;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.5rem;
+    margin-right: 2.5rem;
+}
+
+.login-btn:hover {
+    background: #a11f2d;
+    color: white;
+}
+
+/* Order Items */
+.order-item {
+    border: 1px solid #e0e0e0;
+    margin-bottom: 1rem;
+    background-color: white;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.order-header {
+    display: none; /* Remove the header since the image doesn't have it */
+}
+
+.order-content {
+    display: flex;
+    align-items: center; /* Vertically center the content */
+    padding: 1rem;
+    justify-content: space-between; /* Space out the image, details, and status */
+}
+
+.order-book-image {
+    width: 6.25rem;
+    height: 9.375rem;
+    object-fit: cover;
+    margin-right: 1.5rem;
+}
+
+.order-book-details {
+    flex: 1; /* Take up remaining space */
+}
+
+.order-book-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.order-book-author {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.order-book-price {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #a11f2d;
+}
+
+.order-book-original-price {
+    font-size: 0.875rem;
+    color: #999;
+    text-decoration: line-through;
+    margin-left: 0.5rem;
+}
+
+.order-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 1rem; /* Space between details and status */
+}
+
+.order-status.pending .status-dot { background-color: #4caf50; } /* Match the green dot in the image */
+.order-status.pending .status-text { color: #333; } /* Black text as in the image */
+.order-status.processing .status-dot { background-color: #2196f3; }
+.order-status.processing .status-text { color: #2196f3; }
+.order-status.shipped .status-dot { background-color: #9c27b0; }
+.order-status.shipped .status-text { color: #9c27b0; }
+.order-status.delivered .status-dot { background-color: #4caf50; }
+.order-status.delivered .status-text { color: #4caf50; }
+.order-status.cancelled .status-dot { background-color: #f44336; }
+.order-status.cancelled .status-text { color: #f44336; }
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-text {
+    font-weight: 400;
+    font-size: 0.875rem;
+    color: #333; /* Match the black text in the image */
+}
+
+.order-details {
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.order-content {
+    display: flex;
+    padding: 1rem;
+}
+
+.order-book-image {
+    width: 6.25rem;
+    height: 9.375rem;
+    object-fit: cover;
+    margin-right: 1.5rem;
+}
+
+.order-book-details {
+    flex: 1;
+}
+
+.order-book-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.order-book-author {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.order-book-price {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #a11f2d;
+}
+
+.order-book-original-price {
+    font-size: 0.875rem;
+    color: #999;
+    text-decoration: line-through;
+    margin-left: 0.5rem;
+}
+
+/* Footer */
+.bookstore-dash__footer {
+    background-color: #2a2a2a;
+    color: #ccc;
+    text-align: center;
+    padding: 0.9375rem;
+    font-size: 0.875rem;
+    margin-top: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .bookstore-dash__header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+    }
+
+    .bookstore-dash__search {
+        width: 100%;
+    }
+
+    .bookstore-dash__icons {
+        margin-top: 0.5rem;
+        gap: 1rem;
+    }
+
+    .bookstore-dash__profile-dropdown {
+        right: 1rem;
+    }
+    
+    .order-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .order-book-image {
+        width: 100%;
+        height: auto;
+        margin-right: 0;
+        margin-bottom: 1rem;
+        max-width: 150px;
+    }
+
+    .order-status {
+        margin-left: 0;
+        margin-top: 0.5rem;
+    }
+
+    .order-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .bookstore-dash__profile-dropdown {
+        min-width: 12rem;
+        right: 0.5rem;
+    }
+}

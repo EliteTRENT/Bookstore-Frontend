@@ -336,6 +336,15 @@ body {
     background-color: #d32f2f;
 }
 
+/* Footer */
+.bookstore-dash__footer {
+    background-color: #2a2a2a;
+    color: #ccc;
+    text-align: center;
+    padding: 0.9375rem;
+    font-size: 0.875rem;
+}
+
 /* Profile Dropdown */
 .bookstore-dash__profile-dropdown {
     display: none;

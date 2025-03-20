@@ -37,7 +37,7 @@ function setupProfileDropdown() {
     profileDropdown.innerHTML = `
         <div class="bookstore-dash__profile-item">Hello, ${userName}</div>
         <div class="bookstore-dash__profile-item"><i class="fas fa-user"></i> Profile</div>
-        <div class="bookstore-dash__profile-item"><i class="fas fa-shopping-bag"></i> My Orders</div>
+        <div class="bookstore-dash__profile-item bookstore-dash__profile-orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
         <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
         <div class="bookstore-dash__profile-item bookstore-dash__profile-logout">Logout</div>
     `;
@@ -54,6 +54,13 @@ function setupProfileDropdown() {
             profileDropdown.classList.remove("active");
         }
     });
+
+    const ordersItem = profileDropdown.querySelector(".bookstore-dash__profile-orders");
+    if (ordersItem) {
+        ordersItem.addEventListener("click", () => {
+            window.location.href = "../pages/bookOrders.html";
+        });
+    }
 
     // Navigate to wishlist
     const wishlistItem = profileDropdown.querySelector(".bookstore-dash__profile-wishlist");

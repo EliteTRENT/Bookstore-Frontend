@@ -3,38 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Bookstore</title>
-    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/book--v1.png">
+    <title>Bookstore - Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="../styles/profile.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
-    <div class="bookstore-dash">
-        <!-- Header -->
-        <header class="bookstore-dash__header">
-            <div class="bookstore-dash__logo"><i class="fa-solid fa-book"></i> Bookstore</div>
-            <input type="text" class="bookstore-dash__search" placeholder="Search" id="searchInput">
-            <div class="bookstore-dash__icons">
-                <button class="bookstore-dash__icon" id="profileDropdownTrigger">
-                    <i class="fas fa-user"></i> User
-                </button>
-                <span class="bookstore-dash__icon"><i class="fas fa-shopping-cart"></i> Cart</span>
-            </div>
-        </header>
+    <header class="bookstore-dash__header">
+        <div class="bookstore-dash__logo">
+            <i class="fa-solid fa-book"></i> Bookstore
+        </div>
+        <input type="text" class="bookstore-dash__search" placeholder="Search..." id="searchInput">
+        <div class="bookstore-dash__icons">
+            <button class="bookstore-dash__icon" id="profileDropdownTrigger">
+                <i class="fas fa-user"></i> User
+            </button>
+            <span class="bookstore-dash__icon">
+                <i class="fas fa-shopping-cart"></i> Cart
+            </span>
+        </div>
+    </header>
 
-        <!-- User Profile Section -->
-        <section class="profile-container">
-            <div class="profile-box">
-                <h2>User Profile</h2>
-                <div class="profile-details"></div>
-                <h3>Address Details</h3>
-                <div class="address-list"></div>
-                <button class="edit-btn">Edit Profile</button>
-                <button class="add-address-btn">Add New Address</button>
-            </div>
-        </section>
+    <div class="breadcrumb" id="breadcrumb">
+        <a href="../pages/bookStoreDashboard.html">Home </a> / <span id="profileBreadcrumb">Profile</span>
     </div>
 
+    <div class="profile-container">
+        <div class="profile-section">
+            <div class="section-header">
+                <h2>Personal Details</h2>
+                <a href="#" class="edit-link" id="editPersonalDetails">Edit</a>
+            </div>
+            <div class="profile-details">
+                <div class="detail-item">
+                    <label>Name</label>
+                    <div class="detail-value" id="name"></div>
+                </div>
+                <div class="detail-item">
+                    <label>Email Id</label>
+                    <div class="detail-value" id="email">[Not Available]</div>
+                </div>
+                <div class="detail-item">
+                    <label>Mobile Number</label>
+                    <div class="detail-value" id="mobile_number">[Not Available]</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <div class="section-header">
+                <h2>Address Details</h2>
+                <button class="add-address-btn" id="addAddressBtn">Add New Address</button>
+            </div>
+            <div class="address-details" id="addressDetails"></div>
+        </div>
+    </div>
+
+    <!-- Add New Address Modal -->
+    <div class="modal" id="addAddressModal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Add New Address</h2>
+            <form id="addAddressForm">
+                <div class="address-field">
+                    <label for="newStreet">Address</label>
+                    <textarea id="newStreet" name="street" required></textarea>
+                </div>
+                <div class="address-field city-state">
+                    <div class="city-field">
+                        <label for="newCity">City/Town</label>
+                        <input type="text" id="newCity" name="city" required>
+                    </div>
+                    <div class="state-field">
+                        <label for="newState">State</label>
+                        <input type="text" id="newState" name="state" required>
+                    </div>
+                </div>
+                <div class="address-field">
+                    <label for="newZipCode">Zip Code</label>
+                    <input type="text" id="newZipCode" name="zip_code" required>
+                </div>
+                <div class="address-field">
+                    <label for="newCountry">Country</label>
+                    <input type="text" id="newCountry" name="country" required>
+                </div>
+                <div class="address-type">
+                    <span class="type-label">Type</span>
+                    <div class="type-options">
+                        <label class="radio-option">
+                            <input type="radio" name="newAddressType" value="home" checked>
+                            <span class="radio-text">Home</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="newAddressType" value="work">
+                            <span class="radio-text">Work</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="newAddressType" value="other">
+                            <span class="radio-text">Other</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="save-address-btn">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bookstore-dash__footer">
+        <p>Copyright © 2020, Bookstore Private LTD. All Rights Reserved</p>
+    </footer>
+
     <script src="../js/profile.js"></script>
-</body>
 </html>
