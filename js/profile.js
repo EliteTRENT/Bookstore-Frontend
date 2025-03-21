@@ -134,76 +134,84 @@ async function loadUserData() {
 
         const addressContainer = document.getElementById("addressDetails");
         addressContainer.innerHTML = "";
-        addresses.forEach((address, index) => {
-            addressContainer.innerHTML += `
-                <div class="address-item" data-address-id="${address.id}">
-                    <div class="address-header">
-                        <h3>${index + 1}. ${address.type.toUpperCase()}</h3>
-                        <div class="address-actions">
-                            <a href="#" class="edit-link" data-address-id="${address.id}">Edit</a>
-                            <a href="#" class="remove-link" data-address-id="${address.id}">Remove</a>
-                        </div>
-                    </div>
-                    <div class="address-content">
-                        <div class="address-text">
-                            <div class="address-field">
-                                <label>Address</label>
-                                <p class="address-value">${address.street}</p>
-                                <textarea class="address-input" style="display: none;">${address.street}</textarea>
-                            </div>
-                            <div class="address-field city-state">
-                                <div class="city-field">
-                                    <label>City/Town</label>
-                                    <p class="address-value">${address.city}</p>
-                                    <input type="text" class="address-input" style="display: none;" value="${address.city}">
-                                </div>
-                                <div class="state-field">
-                                    <label>State</label>
-                                    <p class="address-value">${address.state}</p>
-                                    <input type="text" class="address-input" style="display: none;" value="${address.state}">
-                                </div>
-                            </div>
-                            <div class="address-field">
-                                <label>Zip Code</label>
-                                <p class="address-value">${address.zip_code}</p>
-                                <input type="text" class="address-input" style="display: none;" value="${address.zip_code}">
-                            </div>
-                            <div class="address-field">
-                                <label>Country</label>
-                                <p class="address-value">${address.country}</p>
-                                <input type="text" class="address-input" style="display: none;" value="${address.country}">
-                            </div>
-                        </div>
-                        <div class="address-type">
-                            <span class="type-label">Type</span>
-                            <div class="type-options">
-                                <label class="radio-option">
-                                    <input type="radio" name="addressType${address.id}" value="home" ${address.type === "home" ? "checked" : ""}>
-                                    <span class="radio-text">Home</span>
-                                </label>
-                                <label class="radio-option">
-                                    <input type="radio" name="addressType${address.id}" value="work" ${address.type === "work" ? "checked" : ""}>
-                                    <span class="radio-text">Work</span>
-                                </label>
-                                <label class="radio-option">
-                                    <input type="radio" name="addressType${address.id}" value="other" ${address.type === "other" ? "checked" : ""}>
-                                    <span class="radio-text">Other</span>
-                                </label>
-                            </div>
-                        </div>
-                        <button class="update-address-btn" style="display: none;">Update</button>
-                    </div>
+
+        if (addresses.length === 0) {
+            addressContainer.innerHTML = `
+                <div class="no-addresses">
+                    <p>No Addresses Found</p>
+                    <p class="no-addresses-subtext">Add a new address!</p>
                 </div>
             `;
-        });
-
-        setupAddressEventListeners();
+        } else {
+            addresses.forEach((address, index) => {
+                addressContainer.innerHTML += `
+                    <div class="address-item" data-address-id="${address.id}">
+                        <div class="address-header">
+                            <h3>${index + 1}. ${address.type.toUpperCase()}</h3>
+                            <div class="address-actions">
+                                <a href="#" class="edit-link" data-address-id="${address.id}">Edit</a>
+                                <a href="#" class="remove-link" data-address-id="${address.id}">Remove</a>
+                            </div>
+                        </div>
+                        <div class="address-content">
+                            <div class="address-text">
+                                <div class="address-field">
+                                    <label>Address</label>
+                                    <p class="address-value">${address.street || "N/A"}</p>
+                                    <textarea class="address-input street-input" style="display: none;">${address.street || ""}</textarea>
+                                </div>
+                                <div class="address-field city-state">
+                                    <div class="city-field">
+                                        <label>City/Town</label>
+                                        <p class="address-value">${address.city || "N/A"}</p>
+                                        <input type="text" class="address-input city-input" style="display: none;" value="${address.city || ""}">
+                                    </div>
+                                    <div class="state-field">
+                                        <label>State</label>
+                                        <p class="address-value">${address.state || "N/A"}</p>
+                                        <input type="text" class="address-input state-input" style="display: none;" value="${address.state || ""}">
+                                    </div>
+                                </div>
+                                <div class="address-field">
+                                    <label>Zip Code</label>
+                                    <p class="address-value">${address.zip_code || "N/A"}</p>
+                                    <input type="text" class="address-input zip-code-input" style="display: none;" value="${address.zip_code || ""}">
+                                </div>
+                                <div class="address-field">
+                                    <label>Country</label>
+                                    <p class="address-value">${address.country || "N/A"}</p>
+                                    <input type="text" class="address-input country-input" style="display: none;" value="${address.country || ""}">
+                                </div>
+                            </div>
+                            <div class="address-type">
+                                <span class="type-label">Type</span>
+                                <div class="type-options">
+                                    <label class="radio-option">
+                                        <input type="radio" name="addressType${address.id}" value="home" ${address.type === "home" ? "checked" : ""}>
+                                        <span class="radio-text">Home</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="addressType${address.id}" value="work" ${address.type === "work" ? "checked" : ""}>
+                                        <span class="radio-text">Work</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="addressType${address.id}" value="other" ${address.type === "other" ? "checked" : ""}>
+                                        <span class="radio-text">Other</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <button class="update-address-btn" style="display: none;">Update</button>
+                        </div>
+                    </div>
+                `;
+            });
+            setupAddressEventListeners();
+        }
     } catch (error) {
         console.error("Error loading user data:", error.message);
         showToast("Failed to load profile data: " + error.message, 'error');
     }
 }
-
 // Address CRUD operations
 async function addNewAddress(addressData) {
     const token = localStorage.getItem("token");
@@ -240,6 +248,7 @@ async function addNewAddress(addressData) {
 async function updateAddress(addressId, addressData) {
     const token = localStorage.getItem("token");
     try {
+        console.log("Sending update payload:", addressData);
         const response = await fetch(`${BASE_URL}/api/v1/addresses/update/${addressId}`, {
             method: "PATCH",
             headers: {
@@ -377,18 +386,20 @@ function setupAddressEventListeners() {
                 
                 updateBtn.onclick = () => {
                     const addressData = {
-                        street: addressItem.querySelector(".address-input").value,
-                        city: addressItem.querySelector(".city-field .address-input").value,
-                        state: addressItem.querySelector(".state-field .address-input").value,
-                        zip_code: addressItem.querySelectorAll(".address-input")[2].value,
-                        country: addressItem.querySelectorAll(".address-input")[3].value,
+                        street: addressItem.querySelector(".street-input").value,
+                        city: addressItem.querySelector(".city-input").value,
+                        state: addressItem.querySelector(".state-input").value,
+                        zip_code: addressItem.querySelector(".zip-code-input").value,
+                        country: addressItem.querySelector(".country-input").value,
                         type: addressItem.querySelector(`input[name="addressType${addressId}"]:checked`).value
                     };
+                    
+                    console.log("Address data to update:", addressData); // Debug payload
                     
                     if (addressData.street && addressData.city && addressData.state && addressData.zip_code && addressData.country) {
                         updateAddress(addressId, addressData);
                     } else {
-                        showToast("All fields are required", 'error');
+                        showToast("All fields are required", "error");
                     }
                 };
             } else {

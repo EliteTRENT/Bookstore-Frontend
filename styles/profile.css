@@ -308,6 +308,7 @@ body {
     text-align: center;
     padding: 0.9375rem;
     font-size: 0.875rem;
+    margin-top: 7.6vh;
 }
 
 .bookstore-dash__profile-dropdown {
@@ -545,6 +546,27 @@ body {
     background-color: #8e1a25;
 }
 
+.no-addresses {
+    text-align: center;
+    padding: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 0.25rem;
+    margin: 1rem 0;
+}
+
+.no-addresses p {
+    font-size: 1.25rem;
+    color: #666;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.no-addresses-subtext {
+    font-size: 0.9375rem;
+    color: #888;
+    font-weight: normal;
+}
+
 @media (max-width: 768px) {
     .profile-container {
         padding: 1rem;
@@ -583,6 +605,18 @@ body {
         flex-direction: column;
         gap: 0.5rem;
     }
+
+    .no-addresses {
+        padding: 1.5rem;
+    }
+
+    .no-addresses p {
+        font-size: 1.125rem;
+    }
+
+    .no-addresses-subtext {
+        font-size: 0.875rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -608,5 +642,17 @@ body {
     .modal-content {
         margin: 10% auto;
         padding: 1rem;
+    }
+
+    .no-addresses {
+        padding: 1rem;
+    }
+
+    .no-addresses p {
+        font-size: 1rem;
+    }
+
+    .no-addresses-subtext {
+        font-size: 0.8125rem;
     }
 }
