@@ -311,6 +311,8 @@ function updateProfileUI() {
       localStorage.removeItem("user_id");
       localStorage.removeItem("user_name");
       localStorage.removeItem("token");
+      localStorage.removeItem("email");
+      localStorage.removeItem("mobile_number");
       updateProfileUI(); // Reset to "User"
       window.location.href = "../pages/login.html";
     });

@@ -157,6 +157,10 @@ body {
     margin-right: 0.625rem;
 }
 
+.wishlist-icon.filled {
+    color: #FFD700; /* Yellow color for filled heart */
+  }
+
 /* Book Info */
 .book-info {
     width: 60%;

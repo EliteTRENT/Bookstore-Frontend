@@ -75,6 +75,8 @@ function setupProfileDropdown() {
             localStorage.removeItem("user_id");
             localStorage.removeItem("user_name");
             localStorage.removeItem("token");
+            localStorage.removeItem("email");
+            localStorage.removeItem("mobile_number");
             window.location.href = "../pages/login.html";
         });
     }
