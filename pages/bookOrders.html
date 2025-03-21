@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Bookstore</title>
+    <link rel="stylesheet" href="../styles/bookOrders.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="bookstore-dash">
+        <!-- Header -->
+        <header class="bookstore-dash__header">
+            <div class="bookstore-dash__logo"><i class="fa-solid fa-book"></i> Bookstore</div>
+            <input type="text" class="bookstore-dash__search" placeholder="Search" id="searchInput">
+            <div class="bookstore-dash__icons">
+                <button class="bookstore-dash__icon" id="profileDropdownTrigger">
+                    <i class="fas fa-user"></i> User
+                </button>
+                <span class="bookstore-dash__icon"><i class="fas fa-shopping-cart"></i> Cart</span>
+            </div>
+        </header>
+
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a href="../pages/bookStoreDashboard.html">Home</a>
+            <span>/</span>
+            <a href="./bookOrders.html">My Orders</a>
+        </div>
+
+        <div class="orders-container" id="ordersContainer">
+            <!-- Login Prompt -->
+            <div id="loginPrompt" class="orders-empty" style="display: none;">
+                <h2>PLEASE LOG IN</h2>
+                <p>Login to view your order history.</p>
+                <div class="orders-icon">
+                    <i class="fa-solid fa-box"></i>
+                    <i class="fa-solid fa-receipt orders-receipt"></i>
+                </div>
+                <button id="loginBtn" class="login-btn">LOGIN/SIGNUP</button>
+            </div>
+            
+            <!-- Orders Items -->
+            <div id="orderItems" style="display: none;">
+                <h2 id="ordersTitle">My Orders (0)</h2>
+                <div id="ordersList">
+                    <!-- Orders will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bookstore-dash__footer">
+            <p>Copyright © 2020, Bookstore Private LTD. All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="../js/bookOrders.js"></script>
+</body>
+</html>

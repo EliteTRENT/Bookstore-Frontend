@@ -99,10 +99,12 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error(errorMessage);
       }
 
-      // Store user_id and user_name in local storage
+      // Store all relevant user data in localStorage
       localStorage.setItem('user_id', result.user_id);
       localStorage.setItem('user_name', result.user_name);
       localStorage.setItem('token', result.token);
+      localStorage.setItem('email', result.email);
+      localStorage.setItem('mobile_number', result.mobile_number);
 
       alert(result.message || "Login successful!");
       loginForm.reset();

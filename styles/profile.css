@@ -1,4 +1,3 @@
-/* Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -9,19 +8,8 @@ body {
     font-family: 'Roboto', Arial, sans-serif;
     background-color: #f5f5f5;
     color: #333;
-    font-size: 16px;
 }
 
-/* Main Container */
-.bookstore-dash {
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding-top: 4rem;
-}
-
-/* Header */
 .bookstore-dash__header {
     background-color: #a11f2d;
     color: white;
@@ -88,7 +76,241 @@ body {
     font-size: 1.125rem;
 }
 
-/* Profile Dropdown */
+.breadcrumb {
+    background-color: white;
+    padding: 1rem 2rem;
+    font-size: 0.875rem;
+    color: #666;
+    border-bottom: 1px solid #eee;
+    margin-top: 5rem;
+}
+
+.breadcrumb a {
+    color: #666;
+    text-decoration: none;
+}
+
+.profile-container {
+    max-width: 75rem;
+    margin: 1.25rem auto;
+    padding: 1.25rem;
+    background-color: white;
+    box-shadow: 0 0.125rem 0.3125rem rgba(0,0,0,0.1);
+}
+
+.profile-section {
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.profile-section h2 {
+    font-size: 1.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.edit-link, .remove-link {
+    font-size: 0.875rem;
+    color: #a11f2d;
+    text-decoration: none;
+    font-weight: normal;
+    padding: 0.25rem 0.5rem;
+}
+
+.edit-link:hover, .remove-link:hover {
+    text-decoration: underline;
+}
+
+.add-address-btn {
+    background-color: transparent;
+    color: #a11f2d;
+    border: 1px solid #a11f2d;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: normal;
+}
+
+.add-address-btn:hover {
+    background-color: #a11f2d;
+    color: white;
+}
+
+.profile-details {
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border-radius: 0.25rem;
+}
+
+.detail-item {
+    margin-bottom: 1rem;
+}
+
+.detail-item label {
+    font-weight: normal;
+    color: #555;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.detail-value {
+    color: #333;
+    background-color: #f1f1f1;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.9375rem;
+}
+
+.address-details {
+    padding: 0;
+}
+
+.address-item {
+    margin-bottom: 1.5rem;
+    background-color: #f9f9f9;
+    border-radius: 0.25rem;
+}
+
+.address-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.address-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.address-item h3 {
+    font-size: 1rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.address-content {
+    padding: 1rem;
+}
+
+.address-field {
+    margin-bottom: 1rem;
+}
+
+.address-field label {
+    font-weight: normal;
+    color: #555;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.address-text p.address-value {
+    color: #333;
+    line-height: 1.5;
+    font-size: 0.9375rem;
+    margin-bottom: 0.5rem;
+    background-color: #f1f1f1;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+}
+
+.address-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    font-size: 0.9375rem;
+    background-color: #fff;
+}
+
+.address-input:focus {
+    outline: none;
+    border-color: #a11f2d;
+}
+
+.address-field textarea.address-input {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.city-state {
+    display: flex;
+    gap: 1rem;
+}
+
+.city-field, .state-field {
+    flex: 1;
+}
+
+.address-type {
+    margin-top: 1rem;
+}
+
+.type-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #555;
+}
+
+.type-options {
+    display: flex;
+    gap: 2rem;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.radio-option input[type="radio"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+.radio-text {
+    font-size: 0.875rem;
+    color: #333;
+}
+
+.update-address-btn {
+    background-color: #a11f2d;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
+
+.update-address-btn:hover {
+    background-color: #8e1a25;
+}
+
+.bookstore-dash__footer {
+    background-color: #2a2a2a;
+    color: #ccc;
+    text-align: center;
+    padding: 0.9375rem;
+    font-size: 0.875rem;
+    margin-top: 7.6vh;
+}
+
 .bookstore-dash__profile-dropdown {
     display: none;
     position: absolute;
@@ -158,108 +380,198 @@ body {
     color: white;
 }
 
-/* Profile Styles */
-.profile-container {
-    max-width: 600px;
-    margin: 50px auto;
-    padding: 20px;
-    text-align: center;
+/* Toast Notification Styling (Bottom Right) */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    max-width: 300px;
+    font-size: 0.9rem;
 }
 
-.profile-box {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+.toast.success {
+    background-color: #28a745;
 }
 
-.profile-box h2, .profile-box h3 {
-    margin-bottom: 20px;
+.toast.error {
+    background-color: #dc3545;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Modal Styling */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    color: #a11f2d;
+}
+
+.modal-content h2 {
+    font-size: 1.5rem;
     color: #333;
+    margin-bottom: 1.5rem;
 }
 
-.profile-box h2 {
-    font-size: 24px;
+#addAddressForm .address-field {
+    margin-bottom: 1rem;
 }
 
-.profile-box h3 {
-    font-size: 20px;
+#addAddressForm .address-field label {
+    font-weight: normal;
+    color: #555;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
 }
 
-.detail-group {
-    margin-bottom: 15px;
-    text-align: left;
+#addAddressForm .address-field input,
+#addAddressForm .address-field textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    font-size: 0.9375rem;
+    background-color: #fff;
 }
 
-.detail-group label {
-    display: inline-block;
-    width: 120px;
-    font-weight: bold;
+#addAddressForm .address-field textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+#addAddressForm .address-field input:focus,
+#addAddressForm .address-field textarea:focus {
+    outline: none;
+    border-color: #a11f2d;
+}
+
+#addAddressForm .city-state {
+    display: flex;
+    gap: 1rem;
+}
+
+#addAddressForm .city-field,
+#addAddressForm .state-field {
+    flex: 1;
+}
+
+#addAddressForm .address-type {
+    margin-top: 1rem;
+}
+
+#addAddressForm .type-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
     color: #555;
 }
 
-.detail-value {
-    margin-left: 10px;
+#addAddressForm .type-options {
+    display: flex;
+    gap: 2rem;
+}
+
+#addAddressForm .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+#addAddressForm .radio-option input[type="radio"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+#addAddressForm .radio-text {
+    font-size: 0.875rem;
     color: #333;
 }
 
-.address-list {
-    margin-top: 10px;
-}
-
-.address-item {
-    border: 1px solid #ddd;
-    padding: 15px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-}
-
-.edit-btn, .add-address-btn {
-    padding: 10px 20px;
-    background-color: #a71d31;
+.save-address-btn {
+    background-color: #a11f2d;
     color: white;
     border: none;
-    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
     cursor: pointer;
-    margin-right: 10px;
+    font-size: 0.875rem;
+    margin-top: 1rem;
+    width: 100%;
 }
 
-.edit-btn:hover, .add-address-btn:hover {
-    opacity: 0.9;
+.save-address-btn:hover {
+    background-color: #8e1a25;
 }
 
-.edit-mode .detail-value {
-    display: none;
+.no-addresses {
+    text-align: center;
+    padding: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 0.25rem;
+    margin: 1rem 0;
 }
 
-.edit-mode .edit-input {
-    display: inline-block;
-    width: 200px;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.no-addresses p {
+    font-size: 1.25rem;
+    color: #666;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
 }
 
-.save-btn, .cancel-btn {
-    padding: 10px 20px;
-    margin-top: 10px;
-    background-color: #a71d31;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.no-addresses-subtext {
+    font-size: 0.9375rem;
+    color: #888;
+    font-weight: normal;
 }
 
-.cancel-btn {
-    background-color: #ccc;
-}
-
-.save-btn:hover, .cancel-btn:hover {
-    opacity: 0.9;
-}
-
-/* Responsive Design */
 @media (max-width: 768px) {
+    .profile-container {
+        padding: 1rem;
+    }
+
     .bookstore-dash__header {
         flex-direction: column;
         align-items: flex-start;
@@ -278,24 +590,69 @@ body {
     .bookstore-dash__profile-dropdown {
         right: 1rem;
     }
+    
+    .type-options {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .city-state {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    #addAddressForm .city-state {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .no-addresses {
+        padding: 1.5rem;
+    }
+
+    .no-addresses p {
+        font-size: 1.125rem;
+    }
+
+    .no-addresses-subtext {
+        font-size: 0.875rem;
+    }
 }
 
 @media (max-width: 480px) {
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .profile-section h2 {
+        font-size: 1.25rem;
+    }
+
+    .address-item h3 {
+        font-size: 1rem;
+    }
+
     .bookstore-dash__profile-dropdown {
         min-width: 12rem;
         right: 0.5rem;
     }
 
-    .profile-container {
-        margin: 20px;
-        padding: 10px;
+    .modal-content {
+        margin: 10% auto;
+        padding: 1rem;
     }
 
-    .detail-group label {
-        width: 100px;
+    .no-addresses {
+        padding: 1rem;
     }
 
-    .edit-mode .edit-input {
-        width: 150px;
+    .no-addresses p {
+        font-size: 1rem;
+    }
+
+    .no-addresses-subtext {
+        font-size: 0.8125rem;
     }
 }
