@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bookstore - My Cart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="../styles/mycart.css">
+    <link rel="stylesheet" href="../styles/ordersummary.css">
 </head>
 <body>
     <header class="bookstore-dash__header">
@@ -33,39 +33,12 @@
         <a href="bookStoreDashboard.html">Home </a> / <span id="cartPageBreadcrumb">My cart</span>
     </div>
 
-    <div class="cart-container">
-        <div class="cart-items-section">
-            <h2 id="cartTitle">My cart (<span id="cartItemCount">0</span>)</h2>
-            <div class="cart-location">
-                <button class="location-btn">
-                    <i class="fas fa-map-marker-alt"></i> <span id="cartLocation">BridgeLabz Solutions LLP, No...</span>
-                </button>
-            </div>
-            <div id="cartItemsList">
-                <!-- Cart items will be dynamically inserted here via JavaScript -->
-            </div>
-            <button class="place-order">PLACE ORDER</button>
-        </div>
-    </div>
-
-    <div class="cart-container">
-        <div class="section">
-            <h2>Address Details</h2>
-            <div id="address-container">
-            </div>
-        </div>
-    </div>
-
-    <div class="cart-container">
-        <div class="section">
-            <h2>Order Summary</h2>
-        </div>
-    </div>
+    
 
     <footer class="bookstore-dash__footer">
         <p>Copyright © 2020, Bookstore Private LTD. All Rights Reserved</p>
     </footer>
 
-    <script src="../js/mycart.js"></script>
+    <script src="../js/ordersummary.js"></script>
 </body>
 </html>

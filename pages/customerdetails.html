@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bookstore - My Cart</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="../styles/mycart.css">
+    <link rel="stylesheet" href="../styles/customerdetails.css">
 </head>
 <body>
     <header class="bookstore-dash__header">
@@ -44,19 +44,43 @@
             <div id="cartItemsList">
                 <!-- Cart items will be dynamically inserted here via JavaScript -->
             </div>
-            <button class="place-order">PLACE ORDER</button>
         </div>
     </div>
 
-    <div class="cart-container">
+    <div class="content">
         <div class="section">
-            <h2>Address Details</h2>
-            <div id="address-container">
+            <h2>Customer Details</h2>
+            <button class="add-address">Add New Address</button>
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" value="Poonam Yadav" readonly>
             </div>
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="text" value="81678954778" readonly>
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <textarea id="address-street" readonly></textarea>
+            </div>
+            <div class="form-group">
+                <label>City/Town</label>
+                <input id="address-city" type="text" readonly>
+            </div>
+            <div class="form-group">
+                <label>State</label>
+                <input id="address-state" type="text" readonly>
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="address-type" value="Home"> Home</label>
+                    <label><input type="radio" name="address-type" value="Work" checked> Work</label>
+                    <label><input type="radio" name="address-type" value="Other"> Other</label>
+                </div>
+            </div>
+            <button class="continue">CONTINUE</button>
         </div>
-    </div>
-
-    <div class="cart-container">
         <div class="section">
             <h2>Order Summary</h2>
         </div>
@@ -66,6 +90,6 @@
         <p>Copyright © 2020, Bookstore Private LTD. All Rights Reserved</p>
     </footer>
 
-    <script src="../js/mycart.js"></script>
+    <script src="../js/customerdetails.js"></script>
 </body>
 </html>

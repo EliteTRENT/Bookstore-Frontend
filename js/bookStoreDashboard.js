@@ -14,6 +14,62 @@ const BASE_URL = "http://127.0.0.1:3000";
 let debounceTimeout = null;
 let abortController = null;
 
+// Fetch Cart Count
+async function fetchCartCount() {
+  const userId = localStorage.getItem('user_id');
+  const token = localStorage.getItem('token');
+
+  // If user is not logged in, set cart count to 0
+  if (!userId || !token) {
+    updateCartCount(0);
+    return;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Session expired, redirect to login
+        alert("Session expired. Please log in again.");
+        localStorage.removeItem('token');
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('user_name');
+        updateProfileUI();
+        window.location.href = '../pages/login.html';
+        return;
+      }
+      throw new Error(`Error ${response.status}: Failed to fetch cart items`);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch cart items');
+    }
+
+    // Update cart count with the number of items in the cart
+    const cartItems = data.cart || [];
+    updateCartCount(cartItems.length);
+  } catch (error) {
+    console.error('Error fetching cart count:', error.message);
+    updateCartCount(0); // Fallback to 0 on error
+  }
+}
+
+// Update Cart Icon with Count
+function updateCartCount(count) {
+  const cartIcon = document.getElementById('cartIcon');
+  if (cartIcon) {
+    cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${count})`;
+  }
+}
+
 // Fetch Books from Backend
 function fetchBooks(page = 1, sort = "relevance") {
   if (abortController) {
@@ -131,7 +187,7 @@ function renderBooks(books) {
       quantity,
       averageRating,
       totalReviews,
-      book.id // Pass the book ID
+      book.id
     );
   });
 
@@ -140,7 +196,7 @@ function renderBooks(books) {
     button.addEventListener("click", (e) => {
       const bookCard = e.target.closest(".bookstore-dash__book-card");
       const bookId = bookCard.getAttribute("data-book-id");
-      window.location.href = `/pages/bookdetails.html?bookId=${bookId}`; // Redirect to book details page
+      window.location.href = `/pages/bookdetails.html?bookId=${bookId}`;
     });
   });
 }
@@ -149,7 +205,7 @@ function renderBooks(books) {
 function addBookToUI(name, author, image, discounted_price, mrp, quantity, averageRating, totalReviews, bookId) {
   const bookCard = document.createElement("div");
   bookCard.className = "bookstore-dash__book-card";
-  bookCard.setAttribute("data-book-id", bookId); // Add book ID as a data attribute
+  bookCard.setAttribute("data-book-id", bookId);
 
   bookCard.innerHTML = `
         <div class="bookstore-dash__book-image-wrapper">
@@ -296,8 +352,18 @@ function updateProfileUI() {
   }
 }
 
-// Initial profile UI update
-updateProfileUI();
+// Cart Icon Click Functionality
+function setupCartIconListener() {
+  const cartIcon = document.getElementById("cartIcon");
+  if (cartIcon) {
+    cartIcon.addEventListener("click", () => {
+      window.location.href = "../pages/mycart.html"; // Navigate to the cart page
+    });
+  }
+}
 
-// Initial Fetch
+// Initial Setup
+updateProfileUI();
+setupCartIconListener();
 fetchBooks();
+fetchCartCount();

@@ -1,0 +1,436 @@
+/* Reset and Base Styles (kept minimal for context) */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  font-size: 16px;
+  padding-top: 5.75rem;
+  padding-bottom: 3rem;
+}
+
+/* Header */
+.bookstore-dash__header {
+  background-color: #a11f2d;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.bookstore-dash__logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bookstore-dash__logo i {
+  font-size: 1.5rem;
+}
+
+.bookstore-dash__search {
+  padding: 0.625rem;
+  width: 40%;
+  max-width: 100%;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  margin: 0.5rem 0;
+}
+
+.bookstore-dash__icons {
+  display: flex;
+  gap: 1.5625rem;
+}
+
+.bookstore-dash__icon {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: none;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.3s;
+}
+
+.bookstore-dash__icon:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.bookstore-dash__icon i {
+  font-size: 1.125rem;
+}
+
+.bookstore-dash__profile-dropdown {
+  display: none;
+  position: absolute;
+  top: 80%;
+  right: 2rem;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 14rem;
+  padding: 1rem 0;
+}
+
+.bookstore-dash__profile-dropdown.active {
+  display: block;
+}
+
+.bookstore-dash__profile-item {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.bookstore-dash__profile-item:hover {
+  background-color: #ffebee;
+  color: #a11f2d;
+}
+
+.bookstore-dash__profile-item i {
+  font-size: 1rem;
+  color: #666;
+}
+
+.bookstore-dash__profile-item:hover i {
+  color: #a11f2d;
+}
+
+.bookstore-dash__profile-item.bookstore-dash__profile-logout {
+  color: #a11f2d;
+  font-weight: 500;
+  margin: 1rem 1.5rem 0;
+  border: 1px solid #a11f2d;
+  border-radius: 0.25rem;
+  text-align: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+}
+
+.bookstore-dash__profile-item.bookstore-dash__profile-logout:hover {
+  background-color: #a11f2d;
+  color: white;
+}
+
+.bookstore-dash__profile-item.bookstore-dash__profile-logout:hover i {
+  color: white;
+}
+
+/* Footer */
+.bookstore-dash__footer {
+  background-color: #2a2a2a;
+  color: #ccc;
+  text-align: center;
+  padding: 0.9375rem;
+  font-size: 0.875rem;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  margin: 0 1rem 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.breadcrumb a {
+  color: #666;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* Cart Container */
+.cart-container {
+  max-width: 75rem;
+  margin: 1rem auto;
+  padding: 0 1rem;
+}
+
+/* Cart Items Section */
+.cart-items-section {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.1);
+}
+
+.cart-items-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.cart-location {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.location-btn {
+  background: none;
+  border: none;
+  color: #a11f2d;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.location-btn i {
+  font-size: 1rem;
+}
+
+#cartItemsList {
+  min-height: 100px; /* Placeholder height for empty cart */
+}
+
+/* Cart Item Styles */
+.cart-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.cart-item-image {
+  width: 80px;
+  height: 120px;
+  object-fit: cover;
+  margin-right: 1.5rem;
+  border-radius: 0.25rem;
+}
+
+.cart-item-details {
+  flex: 1;
+}
+
+.cart-item-details h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+  color: #333;
+}
+
+.cart-item-details p {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.cart-item-price {
+  margin-bottom: 1rem;
+}
+
+.current-price {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.cart-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.quantity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantity-btn {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 1rem;
+  color: #333;
+}
+
+.quantity-input {
+  width: 3rem;
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+  font-size: 1rem;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #a11f2d;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+/* Content Container */
+.content {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+/* Section Styling */
+.section {
+  background: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+/* Customer Details Styles */
+.add-address {
+  background-color: #8B0000;
+  color: white;
+  padding: 5px 15px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.form-group textarea {
+  height: 80px;
+  resize: none;
+}
+
+.radio-group {
+  display: flex;
+  gap: 20px;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.continue {
+  background-color: #007BFF;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 20px;
+  display: block;
+}
+
+.continue:hover {
+  background-color: #0056b3;
+}
+
+/* Responsive adjustments for header and cart */
+@media (max-width: 768px) {
+  .bookstore-dash__header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .bookstore-dash__search {
+    width: 100%;
+  }
+
+  .bookstore-dash__icons {
+    margin-top: 0.5rem;
+    gap: 1rem;
+  }
+
+  .bookstore-dash__profile-dropdown {
+    right: 1rem;
+  }
+
+  body {
+    padding-top: 8.75rem;
+  }
+
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cart-item-image {
+    margin-bottom: 1rem;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .bookstore-dash__profile-dropdown {
+    min-width: 12rem;
+    right: 0.5rem;
+  }
+
+  body {
+    padding-top: 8.75rem;
+  }
+}

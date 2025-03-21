@@ -301,6 +301,86 @@ function addToWishlist(bookId) {
     });
 }
 
+// Fetch Cart Count
+// Fetch Cart Count
+async function fetchCartCount() {
+  const userId = localStorage.getItem('user_id');
+  const token = localStorage.getItem('token');
+
+  console.log("Fetching cart count...");
+  console.log("User ID:", userId);
+  console.log("Token:", token);
+
+  if (!userId || !token) {
+    console.log("User not logged in. Setting cart count to 0.");
+    updateCartCount(0);
+    return;
+  }
+
+  try {
+    console.log(`Making request to ${BASE_URL}/api/v1/carts/${userId}`);
+    const response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    console.log("Response status:", response.status);
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log("Unauthorized (401). Redirecting to login.");
+        alert("Session expired. Please log in again.");
+        localStorage.removeItem('token');
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('user_name');
+        updateProfileUI();
+        window.location.href = '../pages/login.html';
+        return;
+      }
+      const errorData = await response.json();
+      throw new Error(`Error ${response.status}: ${errorData.error || 'Failed to fetch cart items'}`);
+    }
+
+    const data = await response.json();
+    console.log("Cart API Response:", data);
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch cart items');
+    }
+
+    const cartItems = data.cart || [];
+    console.log("Cart Items:", cartItems);
+    console.log("Cart Count:", cartItems.length);
+    updateCartCount(cartItems.length);
+  } catch (error) {
+    console.error('Error fetching cart count:', error.message);
+    updateCartCount(0);
+  }
+}
+
+// Update Cart Icon with Count
+function updateCartCount(count) {
+  const cartIcon = document.getElementById('cartIcon');
+  if (cartIcon) {
+    console.log(`Updating cart count to ${count}`);
+    cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${count})`;
+  } else {
+    console.warn("Cart icon element not found in the DOM.");
+  }
+}
+
+// Cart Icon Click Functionality
+function setupCartIconListener() {
+  const cartIcon = document.getElementById("cartIcon");
+  if (cartIcon) {
+    cartIcon.addEventListener("click", () => {
+      window.location.href = "../pages/mycart.html"; // Navigate to the cart page
+    });
+  }
+}
+
 // Profile Dropdown Functionality
 function updateProfileUI() {
   const userName = localStorage.getItem("user_name") || "User";
@@ -380,9 +460,55 @@ function setupEventListeners() {
         return;
       }
 
-      // Placeholder for Add to Bag functionality
-      alert("Book added to bag successfully!");
-      // In a full implementation, you would make a POST request to /api/v1/carts/add
+      // Prepare the data for adding to cart
+      const cartData = {
+        cart: {
+          user_id: parseInt(userId),
+          book_id: parseInt(bookId),
+          quantity: 1 // Default quantity of 1
+        }
+      };
+
+      fetch(`${BASE_URL}/api/v1/carts/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(cartData)
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then((err) => {
+              throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+            });
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Add to Cart Response:", data);
+          if (data.message) {
+            alert("Book added to cart successfully!");
+            fetchCartCount(); // Update cart count after adding
+          } else {
+            const errorMessage = Array.isArray(data.errors)
+              ? data.errors.join(", ")
+              : data.error || "Unknown error occurred";
+            alert(`Error: ${errorMessage}`);
+          }
+        })
+        .catch((error) => {
+          console.error("Error adding to cart:", error.message);
+          if (error.message.includes("401")) {
+            alert("Session expired. Please log in again.");
+            localStorage.removeItem("user_id");
+            localStorage.removeItem("user_name");
+            localStorage.removeItem("token");
+            window.location.href = "../pages/login.html";
+          } else {
+            alert("Failed to add book to cart: " + error.message);
+          }
+        });
     });
   }
 
@@ -484,6 +610,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Setup event listeners for buttons
   setupEventListeners();
+
+  // Setup cart icon listener
+  setupCartIconListener();
+
+  // Fetch cart count to display number of items
+  fetchCartCount();
 
   // Initial Fetch
   if (bookId) {
