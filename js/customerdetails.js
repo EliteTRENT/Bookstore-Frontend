@@ -1,4 +1,3 @@
-// API Base URL
 const API_BASE_URL = 'http://127.0.0.1:3000/api/v1';
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -11,13 +10,37 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
+    // Ensure the modal is hidden on page load
+    const addAddressModal = document.getElementById("addAddressModal");
+    if (addAddressModal) {
+        addAddressModal.style.display = "none";
+    }
+
     setupUIEventListeners();
-    updateProfileUI(); // Add this to set up the profile UI immediately
+    setupAddressModalListeners();
+    updateProfileUI();
     await loadCartItems(userId);
     await loadCustomerDetails(userId);
 });
 
-// Setup UI event listeners for header and customer details buttons
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+}
+
 function setupUIEventListeners() {
     const cartIcon = document.getElementById('cartIcon');
     const addAddressBtn = document.querySelector('.add-address');
@@ -31,7 +54,10 @@ function setupUIEventListeners() {
 
     if (addAddressBtn) {
         addAddressBtn.addEventListener('click', () => {
-            toggleAddressEdit(true);
+            const addAddressModal = document.getElementById("addAddressModal");
+            if (addAddressModal) {
+                addAddressModal.style.display = "block";
+            }
         });
     }
 
@@ -42,7 +68,6 @@ function setupUIEventListeners() {
     }
 }
 
-// Get auth headers
 function getAuthHeaders() {
     const token = localStorage.getItem('token');
     return {
@@ -51,7 +76,6 @@ function getAuthHeaders() {
     };
 }
 
-// Update cart count in UI
 function updateCartCount(count) {
     const headerCount = document.querySelector('#cartIcon');
     const sectionCount = document.getElementById('cartItemCount');
@@ -59,7 +83,6 @@ function updateCartCount(count) {
     if (sectionCount) sectionCount.textContent = count;
 }
 
-// Fetch and display cart items
 async function loadCartItems(userId) {
     const cartContainer = document.getElementById('cartItemsList');
     if (!cartContainer) return;
@@ -78,7 +101,7 @@ async function loadCartItems(userId) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user_id');
                 localStorage.removeItem('user_name');
-                updateProfileUI(); // Reset profile UI on logout
+                updateProfileUI();
                 window.location.href = '/pages/login.html';
                 return;
             }
@@ -90,16 +113,17 @@ async function loadCartItems(userId) {
             throw new Error(data.error || 'Failed to fetch cart items');
         }
 
-        renderCartItems(data.cart || []);
-        updateCartCount(data.cart?.length || 0);
+        const cartItems = data.cart || [];
+        localStorage.setItem('cartItems', JSON.stringify(cartItems)); // Update localStorage
+        renderCartItems(cartItems);
+        updateCartCount(cartItems.length);
         setupCartEventListeners();
-        updateCartSummary(data.cart || []);
     } catch (error) {
+        console.error("Error loading cart items:", error.message);
         cartContainer.innerHTML = `<p>Error loading cart: ${error.message}</p>`;
     }
 }
 
-// Render cart items
 function renderCartItems(cartItems) {
     const cartContainer = document.getElementById('cartItemsList');
     if (!cartContainer) return;
@@ -107,7 +131,6 @@ function renderCartItems(cartItems) {
     if (!cartItems || cartItems.length === 0) {
         cartContainer.innerHTML = `<p>Your cart is empty.</p>`;
         updateCartCount(0);
-        updateCartSummary([]);
         return;
     }
 
@@ -136,7 +159,6 @@ function renderCartItems(cartItems) {
     }).join('');
 }
 
-// Setup event listeners for cart actions
 function setupCartEventListeners() {
     document.querySelectorAll('.increase').forEach(button => {
         button.addEventListener('click', function() {
@@ -157,11 +179,10 @@ function setupCartEventListeners() {
     });
 }
 
-// Update quantity
 async function updateQuantity(button, change) {
     const cartItem = button.closest('.cart-item');
     if (!cartItem) {
-        alert("Error: Cart item not found.");
+        showToast("Error: Cart item not found.", 'error');
         return;
     }
 
@@ -170,28 +191,35 @@ async function updateQuantity(button, change) {
     const quantityElement = cartItem.querySelector('.quantity-input');
     const priceElement = cartItem.querySelector('.current-price');
 
+    console.log("Updating quantity for bookId:", bookId, "userId:", userId);
+
     if (!bookId || !userId || !quantityElement || !priceElement) {
-        alert("Error: Missing required elements.");
+        showToast("Error: Missing required elements.", 'error');
         return;
     }
 
     let currentQuantity = parseInt(quantityElement.value, 10);
+    console.log("Current quantity:", currentQuantity);
 
     if (isNaN(currentQuantity)) {
-        alert("Error: Invalid quantity.");
+        showToast("Error: Invalid quantity.", 'error');
         return;
     }
 
     const newQuantity = currentQuantity + change;
+    console.log("New quantity:", newQuantity);
 
     if (newQuantity <= 0) {
+        console.log("Quantity <= 0, removing item...");
         await removeCartItem(button);
         return;
     }
 
     const perUnitPrice = parseFloat(cartItem.dataset.price);
+    console.log("Per unit price:", perUnitPrice);
+
     if (isNaN(perUnitPrice)) {
-        alert("Error: Invalid price.");
+        showToast("Error: Invalid price.", 'error');
         return;
     }
 
@@ -202,6 +230,7 @@ async function updateQuantity(button, change) {
                 quantity: newQuantity
             }
         };
+        console.log("Sending request to update quantity:", requestBody);
 
         const response = await fetch(`${API_BASE_URL}/carts/update_quantity`, {
             method: 'PATCH',
@@ -209,10 +238,15 @@ async function updateQuantity(button, change) {
             body: JSON.stringify(requestBody)
         });
 
+        console.log("Response status:", response.status);
+
         const rawResponse = await response.text();
+        console.log("Raw response:", rawResponse);
+
         let data;
         try {
             data = JSON.parse(rawResponse);
+            console.log("Parsed response data:", data);
         } catch (parseError) {
             throw new Error('Failed to parse response from server');
         }
@@ -225,65 +259,81 @@ async function updateQuantity(button, change) {
             throw new Error(data.error || "Failed to update quantity");
         }
 
+        console.log("Quantity updated successfully, reloading cart...");
         await loadCartItems(userId);
     } catch (error) {
-        alert(`Failed to update quantity: ${error.message}`);
+        console.error("Error updating quantity:", error.message);
+        showToast(`Failed to update quantity: ${error.message}`, 'error');
         quantityElement.value = currentQuantity;
     }
 }
 
-// Remove item
 async function removeCartItem(button) {
     const cartItem = button.closest('.cart-item');
     const bookId = cartItem.dataset.id;
     const userId = localStorage.getItem('user_id');
 
     if (!bookId) {
+        showToast("Error: Book ID not found.", 'error');
         return;
     }
 
     try {
+        console.log(`Removing item with bookId: ${bookId}`);
         const response = await fetch(`${API_BASE_URL}/remove_book/${bookId}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
 
+        console.log("Remove response status:", response.status);
+        console.log("Response headers:", [...response.headers.entries()]);
+
+        // Handle success status codes (200-299) and 204 No Content
+        if (response.status === 204 || (response.status >= 200 && response.status < 300)) {
+            console.log(`Item removed successfully (status ${response.status}), reloading cart...`);
+            await loadCartItems(userId);
+            showToast("Item removed successfully!", 'success');
+            return;
+        }
+
+        const rawResponse = await response.text();
+        console.log("Raw response:", rawResponse || "Empty response");
+
+        let data;
+        try {
+            data = rawResponse ? JSON.parse(rawResponse) : {};
+            console.log("Parsed response data:", data);
+        } catch (parseError) {
+            console.error("Parsing error:", parseError.message);
+            throw new Error('Failed to parse response from server: ' + parseError.message);
+        }
+
         if (!response.ok) {
-            throw new Error("Failed to remove item");
+            console.log("Response not OK, throwing error...");
+            throw new Error(data.error || `HTTP error ${response.status}: Failed to remove item`);
         }
 
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.error || "Failed to remove item");
+        // Check for success in the response
+        console.log("Checking success condition...");
+        if (data.success || (data.message && data.message.toLowerCase().includes("successfully"))) {
+            console.log("Success condition met, reloading cart...");
+            await loadCartItems(userId);
+            showToast("Item removed successfully!", 'success');
+        } else {
+            console.log("Success condition not met, throwing error...");
+            throw new Error(data.error || "Failed to remove item: Unexpected response");
         }
-
-        await loadCartItems(userId);
     } catch (error) {
-        alert("Failed to remove item: " + error.message);
+        console.error("Error removing item:", error.message);
+        showToast(`Failed to remove item: ${error.message}`, 'error');
+        // Still attempt to reload the cart, since the backend operation succeeded
+        await loadCartItems(userId);
     }
 }
 
-// Update cart summary (for order summary section)
-function updateCartSummary(cartItems) {
-    const totalPriceElement = document.getElementById('cart-total');
-    if (!totalPriceElement) return;
-
-    if (!cartItems || cartItems.length === 0) {
-        totalPriceElement.textContent = '0';
-        return;
-    }
-
-    const totalPrice = cartItems.reduce((sum, item) => {
-        return sum + (item.price * (item.quantity || 1));
-    }, 0).toFixed(2);
-
-    totalPriceElement.textContent = totalPrice;
-}
-
-// Profile Dropdown Functionality
 function updateProfileUI() {
     const userName = localStorage.getItem("user_name") || "User";
-    const firstName = userName.split(" ")[0]; // Extract first name
+    const firstName = userName.split(" ")[0];
 
     const profileIcon = document.querySelector("#cartProfileDropdownTrigger");
     if (profileIcon) {
@@ -319,7 +369,6 @@ function updateProfileUI() {
             }
         });
 
-        // Add event listener for My Wishlist navigation
         const wishlistItem = profileDropdown.querySelector(".bookstore-dash__profile-wishlist");
         if (wishlistItem) {
             wishlistItem.addEventListener("click", () => {
@@ -327,23 +376,19 @@ function updateProfileUI() {
             });
         }
 
-        // Logout functionality
         profileDropdown.querySelector(".bookstore-dash__profile-logout").addEventListener("click", () => {
             localStorage.removeItem("user_id");
             localStorage.removeItem("user_name");
             localStorage.removeItem("token");
-            updateProfileUI(); // Reset to "User"
+            updateProfileUI();
             window.location.href = "/pages/login.html";
         });
     }
 }
 
-// New Functionality for Customer Details
-
-// Load customer details
 async function loadCustomerDetails(userId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/users/${userId}/address`, {
+        const response = await fetch(`${API_BASE_URL}/addresses/list`, {
             method: 'GET',
             headers: getAuthHeaders()
         });
@@ -354,93 +399,204 @@ async function loadCustomerDetails(userId) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user_id');
                 localStorage.removeItem('user_name');
-                updateProfileUI(); // Reset profile UI on logout
+                updateProfileUI();
                 window.location.href = '/pages/login.html';
                 return;
             }
-            throw new Error(`Error ${response.status}: Failed to fetch customer details`);
+            const errorData = await response.json();
+            throw new Error(`Error ${response.status}: ${errorData.error || 'Failed to fetch customer details'}`);
         }
 
         const data = await response.json();
-        if (data.success && data.address) {
-            populateCustomerDetails(data.address);
+
+        if (data.user) {
+            localStorage.setItem('user_name', data.user.name || 'User');
+            localStorage.setItem('mobile_number', data.user.number || '');
         }
+
+        const firstAddress = data.addresses && data.addresses.length > 0 ? data.addresses[0] : {};
+        if (firstAddress.id) {
+            localStorage.setItem('selected_address_id', firstAddress.id);
+            localStorage.setItem('selectedAddress', JSON.stringify({
+                id: firstAddress.id,
+                street: firstAddress.street,
+                city: firstAddress.city,
+                state: firstAddress.state,
+                address_type: firstAddress.type
+            }));
+        } else {
+            alert("No address found. Please add an address before proceeding.");
+            return;
+        }
+
+        populateCustomerDetails(data.user, firstAddress);
     } catch (error) {
-        alert(`Failed to load customer details: ${error.message}`);
+        showToast(`Failed to load customer details: ${error.message}`, 'error');
     }
 }
 
-// Populate customer details form
-function populateCustomerDetails(address) {
-    document.querySelector('input[readonly][value="Poonam Yadav"]').value = address.full_name || 'Poonam Yadav';
-    document.querySelector('input[readonly][value="81678954778"]').value = address.mobile_number || '81678954778';
+function populateCustomerDetails(userData, address) {
+    const fullNameInput = document.querySelector('input[value="Poonam Yadav"]');
+    const mobileInput = document.querySelector('input[value="81678954778"]');
+
+    if (fullNameInput) {
+        fullNameInput.value = userData.name || 'Poonam Yadav';
+    }
+    if (mobileInput) {
+        mobileInput.value = userData.number || '81678954778';
+    }
+
     document.getElementById('address-street').value = address.street || '';
     document.getElementById('address-city').value = address.city || '';
     document.getElementById('address-state').value = address.state || '';
+
     const typeRadios = document.getElementsByName('address-type');
+    let addressType = address.type
+        ? address.type.charAt(0).toUpperCase() + address.type.slice(1).toLowerCase()
+        : 'Work';
+
+    const validTypes = ['Home', 'Work', 'Other'];
+    if (!validTypes.includes(addressType)) {
+        addressType = 'Work';
+    }
+
     typeRadios.forEach(radio => {
-        if (radio.value.toLowerCase() === (address.type || 'work').toLowerCase()) {
-            radio.checked = true;
-        }
+        radio.checked = radio.value === addressType;
     });
 }
 
-// Toggle edit mode for address fields
-function toggleAddressEdit(enable) {
-    const inputs = document.querySelectorAll('.form-group input, .form-group textarea');
-    const radios = document.getElementsByName('address-type');
-    inputs.forEach(input => input.readOnly = !enable);
-    radios.forEach(radio => radio.disabled = !enable);
-}
-
-// Save customer details
 async function saveCustomerDetails(userId) {
-    const fullName = document.querySelector('input[readonly][value="Poonam Yadav"]').value;
-    const mobileNumber = document.querySelector('input[readonly][value="81678954778"]').value;
     const street = document.getElementById('address-street').value;
     const city = document.getElementById('address-city').value;
     const state = document.getElementById('address-state').value;
-    const type = document.querySelector('input[name="address-type"]:checked').value;
+    const type = document.querySelector('input[name="address-type"]:checked')?.value;
 
-    if (!street || !city || !state) {
-        alert("Please fill in all address fields.");
+    if (!street || !city || !state || !type) {
+        showToast("Please ensure all address fields are filled.", 'error');
         return;
     }
 
-    const addressData = {
-        address: {
-            full_name: fullName,
-            mobile_number: mobileNumber,
-            street: street,
-            city: city,
-            state: state,
-            type: type
-        }
+    const selectedAddress = {
+        id: localStorage.getItem('selected_address_id'),
+        street,
+        city,
+        state,
+        address_type: type
     };
+    localStorage.setItem('selectedAddress', JSON.stringify(selectedAddress));
 
+    window.location.href = '/pages/ordersummary.html';
+}
+
+async function addNewAddress(addressData) {
+    const token = localStorage.getItem("token");
     try {
-        const response = await fetch(`${API_BASE_URL}/users/${userId}/address`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(addressData)
+        const response = await fetch(`${API_BASE_URL}/addresses/add`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ address: addressData })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error ${response.status}: Failed to save address`);
+        if (response.status !== 201 && !response.ok) {
+            if (response.status === 401) {
+                alert("Session expired. Please log in again.");
+                localStorage.removeItem("token");
+                localStorage.removeItem("user_id");
+                localStorage.removeItem("user_name");
+                updateProfileUI();
+                window.location.href = "/pages/login.html";
+                return;
+            }
+            const text = await response.text();
+            try {
+                const errorData = JSON.parse(text);
+                throw new Error(errorData.errors || "Failed to add address");
+            } catch {
+                throw new Error("Server returned an unexpected response: " + text.slice(0, 100));
+            }
         }
 
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.error || "Failed to save address");
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.error || "Failed to add address");
         }
 
-        alert("Address saved successfully!");
-        toggleAddressEdit(false); // Disable editing after saving
-        window.location.href = '/pages/order-confirmation.html'; // Redirect to confirmation page
+        showToast(result.message || "Address added successfully!");
+
+        if (result.address) {
+            const userData = {
+                name: localStorage.getItem('user_name') || "Poonam Yadav",
+                number: localStorage.getItem('mobile_number') || "81678954778"
+            };
+            populateCustomerDetails(userData, result.address);
+            localStorage.setItem('selected_address_id', result.address.id);
+            localStorage.setItem('selectedAddress', JSON.stringify({
+                id: result.address.id,
+                street: result.address.street,
+                city: result.address.city,
+                state: result.address.state,
+                address_type: result.address.type
+            }));
+        } else {
+            await loadCustomerDetails(localStorage.getItem("user_id"));
+        }
     } catch (error) {
-        alert(`Failed to save address: ${error.message}`);
+        showToast("Failed to add address: " + error.message, 'error');
     }
 }
 
-// Initial Setup
+function setupAddressModalListeners() {
+    const addAddressModal = document.getElementById("addAddressModal");
+    const addAddressForm = document.getElementById("addAddressForm");
+    const closeModal = document.querySelector(".modal-close");
+
+    if (closeModal) {
+        closeModal.addEventListener("click", () => {
+            addAddressModal.style.display = "none";
+            addAddressForm.reset();
+        });
+    }
+
+    window.addEventListener("click", (e) => {
+        if (e.target === addAddressModal) {
+            addAddressModal.style.display = "none";
+            addAddressForm.reset();
+        }
+    });
+
+    if (addAddressForm) {
+        addAddressForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const submitBtn = addAddressForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Saving...";
+
+            const addressData = {
+                street: document.getElementById("newStreet").value,
+                city: document.getElementById("newCity").value,
+                state: document.getElementById("newState").value,
+                zip_code: document.getElementById("newZipCode").value,
+                country: document.getElementById("newCountry").value,
+                type: document.querySelector('input[name="newAddressType"]:checked').value.toLowerCase(),
+                is_default: document.querySelector('input[name="newAddressIsDefault"]:checked').value === 'true'
+            };
+
+            if (addressData.street && addressData.city && addressData.state && addressData.zip_code && addressData.country && addressData.type) {
+                await addNewAddress(addressData);
+                addAddressModal.style.display = "none";
+                addAddressForm.reset();
+            } else {
+                showToast("All fields are required", 'error');
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Save Address";
+        });
+    }
+}
+
+// Ensure profile UI is updated on page load
 updateProfileUI();
