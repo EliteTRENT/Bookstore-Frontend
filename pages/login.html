@@ -6,6 +6,8 @@
     <title>Online Book Shopping - Login</title>
     <link rel="stylesheet" href="../styles/login.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- New Google Identity Services Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div class="container">
@@ -37,8 +39,8 @@
                 <button type="submit" class="btn login-btn">Login</button>
                 <div class="divider">OR</div>
                 <div class="social-login">
-                    <button class="facebook-btn"><i class="fab fa-facebook-f"></i> Facebook</button>
-                    <button class="google-btn"><i class="fab fa-google"></i> Google</button>
+                    <button type="button" class="facebook-btn"><i class="fab fa-facebook-f"></i> Facebook</button>
+                    <button type="button" id="googleSignInBtn" class="google-btn"><i class="fab fa-google"></i> Google</button>
                 </div>
             </form>
         </div>

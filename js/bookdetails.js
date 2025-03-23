@@ -3,7 +3,8 @@ const BASE_URL = "http://127.0.0.1:3000"; // Ensure server is running at this ad
 // Get book ID from URL query parameter
 const urlParams = new URLSearchParams(window.location.search);
 const bookId = urlParams.get("bookId");
-
+const token = localStorage.getItem("token");
+const userId = localStorage.getItem("user_id");
 // DOM Elements
 const bookImage = document.getElementById("bookImage");
 const bookTitle = document.getElementById("bookTitle");
@@ -25,6 +26,7 @@ function fetchBookDetails(bookId) {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
     },
   })
     .then((response) => {
@@ -93,6 +95,7 @@ function fetchReviews(bookId) {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
     },
   })
     .then((response) => {
@@ -197,6 +200,7 @@ function deleteReview(reviewId) {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
       },
       body: JSON.stringify({ user_id: userId }),
     })
@@ -623,7 +627,6 @@ function setupEventListeners() {
             alert("Failed to add book to cart: " + error.message);
           }
         });
-      alert("Book added to bag successfully!");
     });
   }
 
@@ -666,6 +669,7 @@ function setupEventListeners() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(reviewData),
       })

@@ -30,22 +30,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  validateField(nameField, nameRegex, "Name is required.",
-    "Must start with capital letter, min 3 letters, only alphabets, spaces allowed.");
-
-  validateField(emailField, emailRegex, "Email is required.",
-    "Must be valid and end with @gmail, @yahoo, or @ask and a domain.");
-
-  validateField(passwordField, passwordRegex, "Password is required.",
-    "Min 8 chars, 1 upper, 1 lower, 1 digit, 1 special char.");
-
-  validateField(mobileField, mobileRegex, "Mobile number is required.",
-    "Must be 10-digit starting with 6-9, optional +91 prefix.");
+  validateField(nameField, nameRegex, "Name is required.", "Must start with capital letter, min 3 letters, only alphabets, spaces allowed.");
+  validateField(emailField, emailRegex, "Email is required.", "Must be valid and end with @gmail, @yahoo, or @ask and a domain.");
+  validateField(passwordField, passwordRegex, "Password is required.", "Min 8 chars, 1 upper, 1 lower, 1 digit, 1 special char.");
+  validateField(mobileField, mobileRegex, "Mobile number is required.", "Must be 10-digit starting with 6-9, optional +91 prefix.");
 
   signupForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const name = nameField.value.trim();
+    const baseEmail = emailField.value.trim();
     const email = emailField.value.trim();
     const password = passwordField.value.trim();
     const mobile = mobileField.value.trim();
@@ -62,10 +56,10 @@ document.addEventListener("DOMContentLoaded", function () {
       nameField.setCustomValidity("");
     }
 
-    if (!email) {
+    if (!baseEmail) {
       emailField.setCustomValidity("Email is required.");
       hasError = true;
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(baseEmail)) {
       emailField.setCustomValidity("Email must end with @gmail, @yahoo, or @ask and have a valid domain.");
       hasError = true;
     } else {
@@ -112,6 +106,7 @@ document.addEventListener("DOMContentLoaded", function () {
     submitButton.textContent = "Signing up...";
 
     try {
+      console.log("Signup request payload:", signupData);
       const response = await fetch("http://localhost:3000/api/v1/users/signup", {
         method: "POST",
         headers: {
@@ -122,25 +117,37 @@ document.addEventListener("DOMContentLoaded", function () {
         mode: "cors"
       });
 
-      const result = await response.json();
+      console.log("Signup response status:", response.status);
 
       if (!response.ok) {
-        let errorMessage = "Signup failed due to an unknown error";
-        if (result && result.errors) {
-          if (Array.isArray(result.errors)) {
-            errorMessage = result.errors.join(", ");
-          } else if (typeof result.errors === "string") {
-            errorMessage = result.errors;
-          }
+        const errorText = await response.text();
+        console.error("Signup error response (raw):", errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.errors || `Signup failed: ${response.status}`);
+        } catch (jsonError) {
+          throw new Error(`Signup failed with status ${response.status}: ${errorText}`);
         }
-        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log("Signup response:", result);
+
+      // Store user data (adjust based on actual response)
+      localStorage.setItem("user_id", result.user.id);
+      localStorage.setItem("user_name", result.user.name);
+      localStorage.setItem("email", result.user.email);
+      if (result.token) { // Handle token if returned post-Google auth changes
+        localStorage.setItem("token", result.token);
+        console.log("Stored token:", localStorage.getItem("token"));
       }
 
       alert(result.message || "Signup successful!");
       signupForm.reset();
-      window.location.href = "login.html";
+      window.location.href = result.token ? "bookStoreDashboard.html" : "login.html"; // Redirect based on token
     } catch (error) {
-      alert(error.message);
+      console.error("Signup error:", error);
+      alert(error.message || "Failed to signup");
     } finally {
       submitButton.disabled = false;
       submitButton.textContent = "Signup";
