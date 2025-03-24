@@ -386,6 +386,30 @@ body {
     margin-left: 0.5rem;
 }
 
+/* Add to bookOrders.css */
+.cancel-order-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    margin-left: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.cancel-order-btn:hover {
+    background-color: #d32f2f;
+}
+
+.order-content {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    justify-content: space-between; /* Ensure space for the button */
+}
+
 /* Footer */
 .bookstore-dash__footer {
     background-color: #2a2a2a;

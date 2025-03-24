@@ -10,7 +10,7 @@ const loginBtn = document.getElementById("loginBtn");
 const profileIcon = document.getElementById("profileDropdownTrigger");
 const cartIcon = document.getElementById("cartIcon");
 
-// Profile Dropdown Functionality
+// Profile Dropdown Functionality (unchanged)
 function setupProfileDropdown() {
     const userName = localStorage.getItem("user_name") || "User";
     const firstName = userName.split(" ")[0];
@@ -83,7 +83,7 @@ function setupProfileDropdown() {
     }
 }
 
-// Fetch and update cart count
+// Fetch and update cart count (unchanged)
 async function updateCartCount() {
     const userId = localStorage.getItem("user_id");
     const token = localStorage.getItem("token");
@@ -120,7 +120,7 @@ async function updateCartCount() {
     }
 }
 
-// Fetch Orders from Backend
+// Fetch Orders from Backend (unchanged)
 function fetchOrders() {
     const token = localStorage.getItem("token");
     const userId = localStorage.getItem("user_id");
@@ -170,13 +170,14 @@ function fetchOrders() {
         });
 }
 
-// Render Orders
+// Render Orders (Updated to exclude cancelled orders from count and display)
 function renderOrders(orders) {
     ordersList.innerHTML = "";
-    ordersTitle.textContent = `My Orders (${orders.length})`;
-    console.log("Orders received:", orders);
+    // Filter out cancelled orders
+    const activeOrders = orders.filter(order => order.status !== "cancelled");
+    ordersTitle.textContent = `My Orders (${activeOrders.length})`; // Count only active orders
 
-    if (orders.length === 0) {
+    if (activeOrders.length === 0) {
         ordersList.innerHTML = `
             <div class="orders-empty">
                 <h2>You Have No Orders</h2>
@@ -191,24 +192,19 @@ function renderOrders(orders) {
         return;
     }
 
-    orders.forEach((order) => {
-        console.log("Fetching book for order:", order.id, "Book ID:", order.book_id);
+    activeOrders.forEach((order) => {
         fetch(`${BASE_URL}/api/v1/books/show/${order.book_id}`, {
             headers: {
                 "Authorization": `Bearer ${localStorage.getItem("token")}`
             }
         })
             .then((response) => {
-                console.log("Book fetch status:", response.status);
                 if (!response.ok) {
-                    return response.json().then((err) => {
-                        throw new Error(err.error || `HTTP error! Status: ${response.status}`);
-                    });
+                    throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 return response.json();
             })
             .then((bookData) => {
-                console.log("Book data received:", JSON.stringify(bookData, null, 2));
                 const book = bookData.book || {};
                 const orderItem = document.createElement("div");
                 orderItem.className = "order-item";
@@ -228,9 +224,13 @@ function renderOrders(orders) {
                 };
                 const statusText = statusMap[order.status] || order.status;
 
-                // Convert prices to numbers with fallbacks
                 const totalPrice = Number(order.total_price) || 0;
-                const mrp = Number(book.mrp) || totalPrice; // Use totalPrice if mrp is invalid
+                const mrp = Number(book.mrp) || totalPrice;
+
+                // Only show cancel button for pending orders
+                const cancelButton = order.status === "pending" ? `
+                    <button class="cancel-order-btn" data-order-id="${order.id}">Cancel</button>
+                ` : '';
 
                 orderItem.innerHTML = `
                     <div class="order-content">
@@ -247,10 +247,17 @@ function renderOrders(orders) {
                             <span class="status-dot"></span>
                             <span class="status-text">${statusText} on ${orderDate}</span>
                         </div>
+                        ${cancelButton}
                     </div>
                 `;
+                
                 ordersList.appendChild(orderItem);
-                console.log("Order item added:", orderItem.outerHTML);
+
+                // Add event listener for cancel button
+                const cancelBtn = orderItem.querySelector('.cancel-order-btn');
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', () => cancelOrder(order.id, orderItem));
+                }
             })
             .catch((error) => {
                 console.error("Error fetching book for order:", order.id, "Error:", error.message);
@@ -288,14 +295,52 @@ function renderOrders(orders) {
                     </div>
                 `;
                 ordersList.appendChild(orderItem);
-                console.log("Fallback order item added:", orderItem.outerHTML);
             });
     });
 
     showOrderItems();
 }
 
-// Show Login Prompt
+// Add new function to handle order cancellation (Updated)
+function cancelOrder(orderId, orderElement) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Please log in to cancel an order");
+        return;
+    }
+
+    if (confirm("Are you sure you want to cancel this order?")) {
+        fetch(`${BASE_URL}/api/v1/orders/update_status/${orderId}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: "cancelled" })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.errors?.join(", ") || `HTTP error! Status: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.message === "Order status updated successfully") {
+                // Refetch orders to ensure the count and display are updated
+                fetchOrders();
+                alert("Order cancelled successfully");
+            }
+        })
+        .catch(error => {
+            console.error("Error cancelling order:", error);
+            alert("Failed to cancel order: " + error.message);
+        });
+    }
+}
+
+// Show Login Prompt (unchanged)
 function showLoginPrompt() {
     if (loginPrompt && orderItems) {
         loginPrompt.style.display = "block";
@@ -303,7 +348,7 @@ function showLoginPrompt() {
     }
 }
 
-// Show Order Items
+// Show Order Items (unchanged)
 function showOrderItems() {
     if (loginPrompt && orderItems) {
         loginPrompt.style.display = "none";
@@ -311,7 +356,7 @@ function showOrderItems() {
     }
 }
 
-// Initial Setup
+// Initial Setup (unchanged)
 document.addEventListener("DOMContentLoaded", () => {
     setupProfileDropdown();
 
@@ -320,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (userId && token) {
         fetchOrders();
-        updateCartCount(); // Fetch and display cart count on page load
+        updateCartCount();
     } else {
         showLoginPrompt();
     }
@@ -333,11 +378,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (cartIcon) {
         cartIcon.addEventListener("click", () => {
-            window.location.href = "../pages/mycart.html"; // Redirect to My Cart page
+            window.location.href = "../pages/mycart.html";
         });
     }
 
-    // Redirect to dashboard when clicking the logo
     document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
         window.location.href = "../pages/bookStoreDashboard.html";
     });
