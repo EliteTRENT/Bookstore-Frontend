@@ -233,6 +233,7 @@ function addBookToUI(name, author, image, discounted_price, mrp, quantity, avera
     <div class="bookstore-dash__book-image-wrapper">
       <img src="${image}" alt="${name}" class="bookstore-dash__book-image">
       <div class="bookstore-dash__quick-view">Quick View</div>
+      ${quantity === 0 ? '<p class="bookstore-dash__book-out-of-stock">Out of Stock</p>' : ""}
     </div>
     <div class="bookstore-dash__book-details">
       <h3 class="bookstore-dash__book-title">${name}</h3>
@@ -242,7 +243,6 @@ function addBookToUI(name, author, image, discounted_price, mrp, quantity, avera
         <span class="bookstore-dash__review-count">(${totalReviews})</span>
       </p>
       <p class="bookstore-dash__book-price">Rs. ${discounted_price.toFixed(2)} <del>Rs. ${mrp.toFixed(2)}</del></p>
-      ${quantity === 0 ? '<p class="bookstore-dash__book-out-of-stock">Out of Stock</p>' : ""}
     </div>
   `;
 

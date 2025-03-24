@@ -744,4 +744,9 @@ document.addEventListener("DOMContentLoaded", () => {
     discountedPrice.textContent = "0.00";
     mrp.textContent = "0.00";
   }
+
+  // Redirect to dashboard when clicking the logo
+  document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
+    window.location.href = "../pages/bookStoreDashboard.html";
+});
 });

@@ -152,10 +152,6 @@ input:focus {
   border: 0.0625rem solid darkred;
 }
 
-input.error {
-  border-color: darkred;
-}
-
 .password-field {
   position: relative;
   display: flex;

@@ -242,12 +242,23 @@ body {
     margin-left: 0.3125rem;
 }
 
+/* Update the Out of Stock styling */
 .bookstore-dash__book-out-of-stock {
-    color: #e74c3c;
+    position: absolute;
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Center both axes */
+    background-color: white;
+    color: #333; /* Black text */
     font-weight: 700;
-    font-size: 0.875rem;
-    margin-top: 0.3125rem;
+    font-size: 1rem; /* Slightly larger font size (16px) */
     text-transform: uppercase;
+    padding: 0.75rem 2rem; /* More padding to match the size in the image */
+    border-radius: 0.1rem; /* Slightly more rounded corners */
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1); /* Keep the subtle shadow */
+    z-index: 10; /* Ensure it appears above the image */
+    width: 80%; /* Span most of the image width */
+    text-align: center; /* Ensure text is centered within the badge */
 }
 
 /* Pagination */

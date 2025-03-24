@@ -92,6 +92,44 @@ function updateProfileUI() {
     }
 }
 
+// Fetch and update cart count
+async function updateCartCount() {
+    const userId = localStorage.getItem("user_id");
+    const token = localStorage.getItem("token");
+    const cartIcon = document.getElementById("cartIcon");
+
+    if (!userId || !token || !cartIcon) return;
+
+    try {
+        const response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                showToast("Session expired. Please log in again.", "error");
+                localStorage.removeItem("token");
+                localStorage.removeItem("user_id");
+                localStorage.removeItem("user_name");
+                window.location.href = "../pages/login.html";
+                return;
+            }
+            throw new Error("Failed to fetch cart data");
+        }
+
+        const data = await response.json();
+        const cartCount = data.cart?.length || 0;
+        cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${cartCount})`;
+    } catch (error) {
+        console.error("Error fetching cart count:", error.message);
+        cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (0)`;
+    }
+}
+
 // Fetch and display user data and addresses
 async function loadUserData() {
     const userId = localStorage.getItem("user_id");
@@ -212,6 +250,7 @@ async function loadUserData() {
         showToast("Failed to load profile data: " + error.message, 'error');
     }
 }
+
 // Address CRUD operations
 async function addNewAddress(addressData) {
     const token = localStorage.getItem("token");
@@ -318,6 +357,7 @@ function setupEventListeners() {
     const addAddressModal = document.getElementById("addAddressModal");
     const addAddressForm = document.getElementById("addAddressForm");
     const closeModal = document.querySelector(".modal-close");
+    const cartIcon = document.getElementById("cartIcon");
 
     if (addAddressBtn) {
         addAddressBtn.addEventListener("click", () => {
@@ -329,6 +369,12 @@ function setupEventListeners() {
         closeModal.addEventListener("click", () => {
             addAddressModal.style.display = "none";
             addAddressForm.reset();
+        });
+    }
+
+    if (cartIcon) {
+        cartIcon.addEventListener("click", () => {
+            window.location.href = "../pages/mycart.html";
         });
     }
 
@@ -435,4 +481,10 @@ document.addEventListener("DOMContentLoaded", () => {
     updateProfileUI();
     setupEventListeners();
     loadUserData();
+    updateCartCount(); // Fetch and display cart count on page load
+
+    // Redirect to dashboard when clicking the logo
+    document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
+        window.location.href = "../pages/bookStoreDashboard.html";
+    });
 });

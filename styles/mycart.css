@@ -1,4 +1,4 @@
-/* Existing CSS remains unchanged */
+/* Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -9,11 +9,10 @@ body {
     font-family: 'Roboto', Arial, sans-serif;
     background-color: #f5f5f5;
     color: #333;
-    font-size: 16px;
-    padding-top: 5.75rem;
-    padding-bottom: 3rem;
+    padding-top: 5rem; /* Space for fixed header */
 }
 
+/* Header (Matched with bookdetails.css) */
 .bookstore-dash__header {
     background-color: #a11f2d;
     color: white;
@@ -80,6 +79,7 @@ body {
     font-size: 1.125rem;
 }
 
+/* Profile Dropdown (Matched with bookdetails.css) */
 .bookstore-dash__profile-dropdown {
     display: none;
     position: absolute;
@@ -114,6 +114,12 @@ body {
     color: #a11f2d;
 }
 
+.bookstore-dash__profile-item:first-child {
+    font-weight: 500;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
 .bookstore-dash__profile-item i {
     font-size: 1rem;
     color: #666;
@@ -143,22 +149,14 @@ body {
     color: white;
 }
 
-.bookstore-dash__footer {
-    background-color: #2a2a2a;
-    color: #ccc;
-    text-align: center;
-    padding: 0.9375rem;
-    font-size: 0.875rem;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    z-index: 1000;
-}
-
+/* Breadcrumb */
 .breadcrumb {
-    margin: 0 1rem 0.5rem;
+    background-color: white;
+    padding: 1rem 2rem;
     font-size: 0.875rem;
     color: #666;
+    border-bottom: 1px solid #eee;
+    margin-top: 0; /* Adjusted for fixed header */
 }
 
 .breadcrumb a {
@@ -166,16 +164,14 @@ body {
     text-decoration: none;
 }
 
-.breadcrumb a:hover {
-    text-decoration: underline;
-}
-
+/* Cart Container */
 .cart-container {
     max-width: 75rem;
-    margin: 1rem auto;
-    padding: 0 1rem;
+    margin: 1.25rem auto;
+    padding: 1.25rem;
 }
 
+/* Cart Items Section */
 .cart-items-section {
     background-color: white;
     padding: 1.5rem;
@@ -251,13 +247,6 @@ body {
     color: #333;
 }
 
-.original-price {
-    font-size: 0.875rem;
-    color: #999;
-    text-decoration: line-through;
-    margin-left: 0.5rem;
-}
-
 .cart-item-actions {
     display: flex;
     align-items: center;
@@ -301,17 +290,13 @@ body {
     cursor: pointer;
 }
 
-/* Updated CSS for Address Details and Order Summary Sections */
+/* Section (Address Details and Order Summary) */
 .section {
     background-color: white;
     padding: 1.5rem;
     border-radius: 0.25rem;
     box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.1);
     margin-top: 1.5rem;
-    max-width: 75rem;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .section h2 {
@@ -325,16 +310,39 @@ body {
     color: #666;
 }
 
-#address-container p {
-    margin-bottom: 0.5rem;
+/* Place Order Button */
+.place-order {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    display: block;
+    margin: 1rem 0 0 auto;
 }
 
-#cart-total {
-    font-weight: 700;
-    color: #333;
+.place-order:hover {
+    background-color: #0056b3;
 }
 
-/* Responsive adjustments */
+/* Footer (Matched with bookdetails.css) */
+.bookstore-dash__footer {
+    background-color: #2a2a2a;
+    color: #ccc;
+    text-align: center;
+    padding: 0.9375rem;
+    font-size: 0.875rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .bookstore-dash__header {
         flex-direction: column;
@@ -353,10 +361,6 @@ body {
 
     .bookstore-dash__profile-dropdown {
         right: 1rem;
-    }
-
-    body {
-        padding-top: 8.75rem;
     }
 
     .cart-item {
@@ -380,30 +384,11 @@ body {
         right: 0.5rem;
     }
 
-    body {
-        padding-top: 8.75rem;
+    .cart-items-section h2 {
+        font-size: 1.25rem;
     }
 
     .section h2 {
         font-size: 1.25rem;
     }
-}
-
-/* New CSS for Place Order Button */
-.place-order {
-    background-color: #007BFF;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    display: block;
-    margin: 1rem 0 0 auto; /* Align to the right */
-}
-
-.place-order:hover {
-    background-color: #0056b3;
 }

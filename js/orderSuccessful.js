@@ -1,5 +1,61 @@
 // orderSuccessful.js
 
+// API Base URL
+const API_BASE_URL = 'http://127.0.0.1:3000/api/v1';
+
+// Function to get authentication headers
+function getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+// Function to update cart count in the header
+function updateCartCount(count) {
+    const cartIcon = document.getElementById('cartIcon');
+    const cartCount = document.getElementById('cartCount');
+    if (cartIcon && cartCount) {
+        cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${count})`;
+        cartCount.textContent = count;
+    }
+}
+
+// Function to fetch cart items and update count
+async function loadCartCount(userId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/carts/${userId}`, {
+            method: 'GET',
+            headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                alert("Session expired. Please log in again.");
+                localStorage.removeItem('token');
+                localStorage.removeItem('user_id');
+                localStorage.removeItem('user_name');
+                updateProfileUI();
+                window.location.href = '/pages/login.html';
+                return;
+            }
+            throw new Error(`Error ${response.status}: Failed to fetch cart items`);
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to fetch cart items');
+        }
+
+        const cartCount = data.cart?.length || 0;
+        updateCartCount(cartCount);
+    } catch (error) {
+        console.error('Error loading cart count:', error.message);
+        updateCartCount(0); // Default to 0 on error
+    }
+}
+
 // Profile Dropdown Functionality
 function updateProfileUI() {
     const userName = localStorage.getItem("user_name") || "User";
@@ -81,10 +137,26 @@ function updateProfileUI() {
 }
 
 // Initial Setup
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('user_id');
+
+    if (!token || !userId) {
+        alert("Please log in to view this page.");
+        window.location.href = '/pages/login.html';
+        return;
+    }
+
     updateProfileUI();
+    await loadCartCount(userId); // Load cart count on page load
+
     // Add event listener for Continue Shopping button
     document.querySelector(".continue-button").addEventListener("click", () => {
+        window.location.href = "../pages/bookStoreDashboard.html";
+    });
+
+    // Redirect to dashboard when clicking the logo
+    document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
         window.location.href = "../pages/bookStoreDashboard.html";
     });
 });

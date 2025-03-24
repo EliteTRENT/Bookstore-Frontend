@@ -1,4 +1,4 @@
-/* Reset and Base Styles (kept minimal for context) */
+/* Reset and Base Styles */
 * {
   margin: 0;
   padding: 0;
@@ -9,12 +9,11 @@ body {
   font-family: 'Roboto', Arial, sans-serif;
   background-color: #f5f5f5;
   color: #333;
-  font-size: 16px;
-  padding-top: 5.75rem;
-  padding-bottom: 3rem;
+  padding-top: 5rem; /* Space for fixed header */
+  padding-bottom: 3rem; /* Space for fixed footer */
 }
 
-/* Header */
+/* Header (Matched with bookdetails.css) */
 .bookstore-dash__header {
   background-color: #a11f2d;
   color: white;
@@ -81,6 +80,7 @@ body {
   font-size: 1.125rem;
 }
 
+/* Profile Dropdown (Matched with bookdetails.css) */
 .bookstore-dash__profile-dropdown {
   display: none;
   position: absolute;
@@ -115,6 +115,12 @@ body {
   color: #a11f2d;
 }
 
+.bookstore-dash__profile-item:first-child {
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
 .bookstore-dash__profile-item i {
   font-size: 1rem;
   color: #666;
@@ -144,24 +150,14 @@ body {
   color: white;
 }
 
-/* Footer */
-.bookstore-dash__footer {
-  background-color: #2a2a2a;
-  color: #ccc;
-  text-align: center;
-  padding: 0.9375rem;
-  font-size: 0.875rem;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  z-index: 1000;
-}
-
 /* Breadcrumb */
 .breadcrumb {
-  margin: 0 1rem 0.5rem;
+  background-color: white;
+  padding: 1rem 2rem;
   font-size: 0.875rem;
   color: #666;
+  border-bottom: 1px solid #eee;
+  margin-top: 0; /* Adjusted for fixed header */
 }
 
 .breadcrumb a {
@@ -169,15 +165,11 @@ body {
   text-decoration: none;
 }
 
-.breadcrumb a:hover {
-  text-decoration: underline;
-}
-
 /* Cart Container */
 .cart-container {
   max-width: 75rem;
-  margin: 1rem auto;
-  padding: 0 1rem;
+  margin: 1.25rem auto;
+  padding: 1.25rem;
 }
 
 /* Cart Items Section */
@@ -215,11 +207,6 @@ body {
   font-size: 1rem;
 }
 
-#cartItemsList {
-  min-height: 100px; /* Placeholder height for empty cart */
-}
-
-/* Cart Item Styles */
 .cart-item {
   display: flex;
   align-items: center;
@@ -306,19 +293,18 @@ body {
 
 /* Content Container */
 .content {
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
+  max-width: 75rem;
+  margin: 1.25rem auto;
+  padding: 1.25rem;
 }
 
 /* Section Styling */
 .section {
-  background: #fff;
-  padding: 20px;
-  margin-bottom: 20px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
 }
 
 .section h2 {
@@ -329,13 +315,18 @@ body {
 
 /* Customer Details Styles */
 .add-address {
-  background-color: #8B0000;
+  background-color: #A61C3C;
   color: white;
-  padding: 5px 15px;
+  padding: 10px 20px;
   border: none;
   cursor: pointer;
   border-radius: 4px;
   margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.add-address:hover {
+  background-color: #8B1632;
 }
 
 .form-group {
@@ -387,9 +378,10 @@ body {
 .continue:hover {
   background-color: #0056b3;
 }
+
 /* Modal Styles */
 .modal {
-  display: none; /* Hidden by default */
+  display: none;
   position: fixed;
   z-index: 1000;
   left: 0;
@@ -397,12 +389,12 @@ body {
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.4); /* Dark overlay */
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 .modal-content {
   background-color: #fff;
-  margin: 10% auto; /* Centered on the screen */
+  margin: 10% auto;
   padding: 20px;
   border: 1px solid #888;
   width: 90%;
@@ -432,41 +424,8 @@ body {
   color: #333;
 }
 
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #555;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
-.form-group textarea {
-  height: 80px;
-  resize: vertical;
-}
-
-.form-group .radio-group {
-  display: flex;
-  gap: 15px;
-}
-
 .form-group .radio-group label {
   font-weight: normal;
-  display: flex;
-  align-items: center;
-  gap: 5px;
 }
 
 button[type="submit"] {
@@ -489,7 +448,7 @@ button[type="submit"]:disabled {
   cursor: not-allowed;
 }
 
-/* Toast Styles (for success/error messages) */
+/* Toast Styles */
 .toast {
   position: fixed;
   bottom: 20px;
@@ -515,65 +474,63 @@ button[type="submit"]:disabled {
   background-color: #f44336;
 }
 
-/* Ensure the Add New Address button is styled appropriately */
-.add-address {
-  background-color: #A61C3C;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-bottom: 20px;
-  font-size: 16px;
+/* Footer (Matched with bookdetails.css) */
+.bookstore-dash__footer {
+  background-color: #2a2a2a;
+  color: #ccc;
+  text-align: center;
+  padding: 0.9375rem;
+  font-size: 0.875rem;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 1000;
 }
 
-.add-address:hover {
-  background-color: #8B1632;
-}
-
-/* Responsive adjustments for header and cart */
+/* Responsive Design */
 @media (max-width: 768px) {
   .bookstore-dash__header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1rem;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 1rem;
   }
 
   .bookstore-dash__search {
-    width: 100%;
+      width: 100%;
   }
 
   .bookstore-dash__icons {
-    margin-top: 0.5rem;
-    gap: 1rem;
+      margin-top: 0.5rem;
+      gap: 1rem;
   }
 
   .bookstore-dash__profile-dropdown {
-    right: 1rem;
-  }
-
-  body {
-    padding-top: 8.75rem;
+      right: 1rem;
   }
 
   .cart-item {
-    flex-direction: column;
-    align-items: flex-start;
+      flex-direction: column;
+      align-items: flex-start;
   }
 
   .cart-item-image {
-    margin-bottom: 1rem;
-    margin-right: 0;
+      margin-bottom: 1rem;
+      margin-right: 0;
+  }
+
+  .content {
+      padding: 1rem;
   }
 }
 
 @media (max-width: 480px) {
   .bookstore-dash__profile-dropdown {
-    min-width: 12rem;
-    right: 0.5rem;
+      min-width: 12rem;
+      right: 0.5rem;
   }
 
-  body {
-    padding-top: 8.75rem;
+  .cart-items-section h2,
+  .section h2 {
+      font-size: 1.25rem;
   }
 }
