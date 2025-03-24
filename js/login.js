@@ -30,8 +30,13 @@ document.addEventListener("DOMContentLoaded", function () {
     })
       .then(response => {
         if (!response.ok) {
-          return response.json().then(err => {
-            throw new Error(`Google login failed: ${JSON.stringify(err)}`);
+          return response.text().then(text => {
+            try {
+              const err = JSON.parse(text); // Try parsing as JSON
+              throw new Error(err.details || err.error || "Google login failed");
+            } catch {
+              throw new Error(`Google login failed: Unexpected response - ${text}`);
+            }
           });
         }
         return response.json();
@@ -42,9 +47,8 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("user_name", result.user_name);
         localStorage.setItem("token", result.token);
         localStorage.setItem("email", result.email);
-        localStorage.setItem("mobile_number", result.mobile_number)
+        localStorage.setItem("mobile_number", result.mobile_number);
         console.log("Stored token:", result.token);
-        // Decode token manually (for debugging)
         const tokenParts = result.token.split(".");
         const payload = JSON.parse(atob(tokenParts[1]));
         console.log("Google token payload:", payload);
@@ -53,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .catch(error => {
         console.error("Google Sign-In error:", error);
-        alert(error.message || "Failed to login with Google");
+        alert(error.message); // Show the exact error from backend
       });
   };
 
@@ -69,16 +73,14 @@ document.addEventListener("DOMContentLoaded", function () {
       auto_select: false
     });
     google.accounts.id.renderButton(googleSignInBtn, {
-      theme: "outline", // Use "outline" and rely on CSS for red fill
+      theme: "outline",
       size: "large",
       text: "signin_with",
       shape: "rectangular",
-      width: "100%" // Match the width behavior of your .google-btn
+      width: "100%"
     });
     googleSignInBtn.disabled = false;
     console.log("Google Sign-In initialized");
-  
-    // Ensure custom styles are applied post-render
     googleSignInBtn.querySelector("div[role=button]").style.backgroundColor = "#db4437";
     googleSignInBtn.querySelector("div[role=button]").style.color = "white";
     googleSignInBtn.querySelector("div[role=button]").style.border = "none";
@@ -145,29 +147,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
       console.log("Normal login response status:", response.status);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Normal login error response (raw):", errorText);
-        throw new Error(`Login failed: ${response.status}`);
-      }
-
       const result = await response.json();
-      console.log("Normal login response:", result);
 
-      // Adjusted to match login response structure
-      localStorage.setItem("user_id", result.user_id);
-      localStorage.setItem("user_name", result.user_name);
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("email", result.email);
-      localStorage.setItem("mobile_number", result.mobile_number)
-      console.log("Stored token:", localStorage.getItem("token"));
-
-      alert(result.message || "Login successful!");
-      loginForm.reset();
-      window.location.href = "bookStoreDashboard.html";
+      if (response.ok) {
+        // Success case
+        console.log("Normal login response:", result);
+        localStorage.setItem("user_id", result.user_id);
+        localStorage.setItem("user_name", result.user_name);
+        localStorage.setItem("token", result.token);
+        localStorage.setItem("email", result.email);
+        localStorage.setItem("mobile_number", result.mobile_number);
+        console.log("Stored token:", localStorage.getItem("token"));
+        alert(result.message || "Login successful!");
+        loginForm.reset();
+        window.location.href = "bookStoreDashboard.html";
+      } else {
+        // Error case - display backend error
+        console.error("Normal login error response:", result);
+        alert(result.errors || "Failed to login. Check your credentials.");
+      }
     } catch (error) {
       console.error("Normal login error:", error);
-      alert(error.message || "Failed to login. Check your credentials.");
+      alert("Network error: Unable to reach server.");
     } finally {
       submitButton.disabled = false;
       submitButton.textContent = "Login";

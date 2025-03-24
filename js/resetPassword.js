@@ -1,13 +1,39 @@
 document.getElementById('reset-password-form').addEventListener('submit', async function (e) {
   e.preventDefault();
 
-  const otp = document.getElementById('otp').value;
-  const newPassword = document.getElementById('new-password').value;
+  const otpField = document.getElementById('otp');
+  const newPasswordField = document.getElementById('new-password');
+  const otp = otpField.value.trim();
+  const newPassword = newPasswordField.value.trim();
   const messageDiv = document.getElementById('message');
   const button = document.querySelector('.reset-btn');
 
   if (!messageDiv) {
       console.error('Message div not found in HTML');
+      return;
+  }
+
+  // OTP validation
+  const otpRegex = /^\d{6}$/;
+  if (!otp) {
+      messageDiv.style.color = 'red';
+      messageDiv.textContent = 'OTP is required.';
+      return;
+  } else if (!otpRegex.test(otp)) {
+      messageDiv.style.color = 'red';
+      messageDiv.textContent = 'OTP must be a 6-digit number.';
+      return;
+  }
+
+  // Password validation from signup.js
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%#*?&])[A-Za-z\d@$!#%*?&]{8,}$/;
+  if (!newPassword) {
+      messageDiv.style.color = 'red';
+      messageDiv.textContent = 'Password is required.';
+      return;
+  } else if (!passwordRegex.test(newPassword)) {
+      messageDiv.style.color = 'red';
+      messageDiv.textContent = 'Min 8 chars, 1 upper, 1 lower, 1 digit, 1 special char.';
       return;
   }
 
@@ -26,7 +52,7 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
   button.textContent = 'Resetting...';
 
   try {
-      const url = `http://localhost:3000/api/v1/users/reset/${userId}`; 
+      const url = `http://localhost:3000/api/v1/users/reset/${userId}`;
       console.log('Fetching URL:', url);
       const response = await fetch(url, {
           method: 'POST',
@@ -36,7 +62,7 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
           body: JSON.stringify({ 
               user: { 
                   otp: otp,
-                  new_password: newPassword 
+                  new_password: newPassword // Fixed to match backend expectation
               } 
           }),
       });
@@ -65,3 +91,91 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
       button.textContent = 'RESET PASSWORD';
   }
 });
+
+// Real-time validation function
+function validateField(field, regex, emptyMessage, invalidMessage) {
+  field.addEventListener('input', () => {
+      const value = field.value.trim();
+      if (!value) {
+          field.setCustomValidity(emptyMessage);
+      } else if (!regex.test(value)) {
+          field.setCustomValidity(invalidMessage);
+      } else {
+          field.setCustomValidity('');
+      }
+      field.reportValidity();
+  });
+}
+
+// Apply real-time validation to OTP and password fields
+const otpField = document.getElementById('otp');
+validateField(
+  otpField,
+  /^\d{6}$/,
+  'OTP is required.',
+  'OTP must be a 6-digit number.'
+);
+
+const newPasswordField = document.getElementById('new-password');
+validateField(
+  newPasswordField,
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%#*?&])[A-Za-z\d@$!#%*?&]{8,}$/,
+  'Password is required.',
+  'Min 8 chars, 1 upper, 1 lower, 1 digit, 1 special char.'
+);
+
+// Password visibility toggle
+const togglePassword = document.querySelector('.toggle-password');
+if (togglePassword) {
+  togglePassword.addEventListener('click', function () {
+      if (newPasswordField.type === 'password') {
+          newPasswordField.type = 'text';
+          togglePassword.classList.remove('fa-eye');
+          togglePassword.classList.add('fa-eye-slash');
+      } else {
+          newPasswordField.type = 'password';
+          togglePassword.classList.remove('fa-eye-slash');
+          togglePassword.classList.add('fa-eye');
+      }
+  });
+}
+
+function startTimer(durationInSeconds) {
+  const countdownSpan = document.getElementById('countdown');
+  let timeRemaining = durationInSeconds;
+
+  const updateTimerDisplay = () => {
+      const minutes = String(Math.floor(timeRemaining / 60)).padStart(2, '0');
+      const seconds = String(timeRemaining % 60).padStart(2, '0');
+      countdownSpan.textContent = `${minutes}:${seconds}`;
+  };
+
+  updateTimerDisplay();
+
+  const countdown = setInterval(() => {
+      timeRemaining--;
+
+      if (timeRemaining < 0) {
+        clearInterval(countdown);
+        countdownSpan.textContent = '00:00';
+        document.getElementById('otp').disabled = true;
+        document.getElementById('new-password').disabled = true;
+        document.querySelector('.reset-btn').disabled = true;
+    
+        const messageDiv = document.getElementById('message');
+        if (messageDiv) {
+            messageDiv.style.color = 'red';
+            messageDiv.textContent = 'OTP expired. Redirecting to request a new one...';
+        }
+    
+        setTimeout(() => {
+            window.location.href = 'forgotPassword.html';
+        }, 3000);
+    } else {
+      updateTimerDisplay();  
+    }
+  }, 1000);
+}
+
+startTimer(117);
+

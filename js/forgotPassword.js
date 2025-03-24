@@ -1,12 +1,25 @@
 document.getElementById('reset-password-form').addEventListener('submit', async function (e) {
     e.preventDefault();
 
-    const email = document.getElementById('email').value;
+    const emailField = document.getElementById('email');
+    const email = emailField.value.trim(); // Trim whitespace
     const messageDiv = document.getElementById('message');
     const button = document.querySelector('.reset-btn');
 
     if (!messageDiv) {
         console.error('Message div not found in HTML');
+        return;
+    }
+
+    // Email validation from signup.js
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|ask)\.[a-zA-Z]{2,}$/;
+    if (!email) {
+        messageDiv.style.color = 'red';
+        messageDiv.textContent = 'Email is required.';
+        return;
+    } else if (!emailRegex.test(email)) {
+        messageDiv.style.color = 'red';
+        messageDiv.textContent = 'Email must end with @gmail, @yahoo, or @ask and have a valid domain.';
         return;
     }
 
@@ -29,9 +42,9 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
             messageDiv.style.color = 'green';
             messageDiv.textContent = data.message;
             // Store user ID and email in localStorage
-            if (data.user_id) { // Assuming backend returns user_id
+            if (data.user_id) {
                 localStorage.setItem('userId', data.user_id);
-                localStorage.setItem('resetEmail', email); // Still useful for resend OTP
+                localStorage.setItem('resetEmail', email);
             } else {
                 console.error('User ID not returned from backend');
             }
@@ -52,3 +65,27 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
         button.textContent = 'RESET PASSWORD';
     }
 });
+
+// Real-time validation function from signup.js
+function validateField(field, regex, emptyMessage, invalidMessage) {
+    field.addEventListener('input', () => {
+        const value = field.value.trim();
+        if (!value) {
+            field.setCustomValidity(emptyMessage);
+        } else if (!regex.test(value)) {
+            field.setCustomValidity(invalidMessage);
+        } else {
+            field.setCustomValidity('');
+        }
+        field.reportValidity();
+    });
+}
+
+// Apply real-time validation to email field
+const emailField = document.getElementById('email');
+validateField(
+    emailField,
+    /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|ask)\.[a-zA-Z]{2,}$/,
+    'Email is required.',
+    'Email must end with @gmail, @yahoo, or @ask and have a valid domain.'
+);
