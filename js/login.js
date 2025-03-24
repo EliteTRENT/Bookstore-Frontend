@@ -69,13 +69,20 @@ document.addEventListener("DOMContentLoaded", function () {
       auto_select: false
     });
     google.accounts.id.renderButton(googleSignInBtn, {
-      theme: "outline",
+      theme: "outline", // Use "outline" and rely on CSS for red fill
       size: "large",
       text: "signin_with",
-      shape: "rectangular"
+      shape: "rectangular",
+      width: "100%" // Match the width behavior of your .google-btn
     });
     googleSignInBtn.disabled = false;
     console.log("Google Sign-In initialized");
+  
+    // Ensure custom styles are applied post-render
+    googleSignInBtn.querySelector("div[role=button]").style.backgroundColor = "#db4437";
+    googleSignInBtn.querySelector("div[role=button]").style.color = "white";
+    googleSignInBtn.querySelector("div[role=button]").style.border = "none";
+    googleSignInBtn.querySelector("div[role=button]").style.borderRadius = "0.375rem";
   }
 
   if (window.google && window.google.accounts) {

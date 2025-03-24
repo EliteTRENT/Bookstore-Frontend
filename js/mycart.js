@@ -19,6 +19,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 function setupUIEventListeners() {
     const cartIcon = document.getElementById('cartIcon');
     const placeOrderBtn = document.querySelector('.place-order');
+    const profileTrigger = document.getElementById('profileDropdownTrigger');
+    const profileDropdown = document.getElementById('profileDropdown');
 
     if (cartIcon) {
         cartIcon.addEventListener('click', () => {
@@ -34,6 +36,19 @@ function setupUIEventListeners() {
                 return;
             }
             window.location.href = '/pages/customerdetails.html';
+        });
+    }
+
+    if (profileTrigger && profileDropdown) {
+        profileTrigger.addEventListener("click", (e) => {
+            e.preventDefault();
+            profileDropdown.classList.toggle("active");
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!profileTrigger.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove("active");
+            }
         });
     }
 }
@@ -248,7 +263,6 @@ async function removeCartItem(button) {
             headers: getAuthHeaders()
         });
 
-        // Handle cases where the item is already deleted or not found
         if (response.status === 404) {
             try {
                 await loadCartItems(userId);
@@ -317,55 +331,53 @@ function updateCartSummary(cartItems) {
 function updateProfileUI() {
     const userName = localStorage.getItem("user_name") || "User";
     const firstName = userName.split(" ")[0];
+    const profileIcon = document.getElementById("profileDropdownTrigger");
+    const profileDropdown = document.getElementById("profileDropdown");
 
-    const profileIcon = document.querySelector("#cartProfileDropdownTrigger");
     if (profileIcon) {
         profileIcon.innerHTML = `<i class="fas fa-user"></i> ${firstName}`;
-    }
-
-    let profileDropdown = document.querySelector("#cartProfileDropdown");
-    if (!profileDropdown && profileIcon) {
-        profileDropdown = document.createElement("div");
-        profileDropdown.className = "bookstore-dash__profile-dropdown";
-        profileDropdown.id = "cartProfileDropdown";
-        document.querySelector(".bookstore-dash__header").appendChild(profileDropdown);
     }
 
     if (profileDropdown) {
         profileDropdown.innerHTML = `
             <div class="bookstore-dash__profile-item">Hello, ${userName}</div>
-            <div class="bookstore-dash__profile-item"><i class="fas fa-user"></i> Profile</div>
-            <div class="bookstore-dash__profile-item"><i class="fas fa-shopping-bag"></i> My Orders</div>
-            <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
+            <div class="bookstore-dash__profile-item bookstore-dash__profile-profile"><i class="fas fa-user"></i> Profile</div>
+            <div class="bookstore-dash__profile-item bookstore-dash__profile-orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
+            <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> Wishlist</div>
             <div class="bookstore-dash__profile-item bookstore-dash__profile-logout"><i class="fas fa-sign-out-alt"></i> Logout</div>
         `;
 
-        profileIcon.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            profileDropdown.classList.toggle("active");
-        });
+        const profileItem = profileDropdown.querySelector(".bookstore-dash__profile-profile");
+        if (profileItem) {
+            profileItem.addEventListener("click", () => {
+                window.location.href = "../pages/profile.html";
+            });
+        }
 
-        document.addEventListener("click", (e) => {
-            if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
-                profileDropdown.classList.remove("active");
-            }
-        });
+        const ordersItem = profileDropdown.querySelector(".bookstore-dash__profile-orders");
+        if (ordersItem) {
+            ordersItem.addEventListener("click", () => {
+                window.location.href = "../pages/bookOrders.html";
+            });
+        }
 
         const wishlistItem = profileDropdown.querySelector(".bookstore-dash__profile-wishlist");
         if (wishlistItem) {
             wishlistItem.addEventListener("click", () => {
-                window.location.href = "/pages/bookWishlist.html";
+                window.location.href = "../pages/bookWishlist.html";
             });
         }
 
-        profileDropdown.querySelector(".bookstore-dash__profile-logout").addEventListener("click", () => {
-            localStorage.removeItem("user_id");
-            localStorage.removeItem("user_name");
-            localStorage.removeItem("token");
-            updateProfileUI();
-            window.location.href = "/pages/login.html";
-        });
+        const logoutItem = profileDropdown.querySelector(".bookstore-dash__profile-logout");
+        if (logoutItem) {
+            logoutItem.addEventListener("click", () => {
+                localStorage.removeItem("user_id");
+                localStorage.removeItem("user_name");
+                localStorage.removeItem("token");
+                updateProfileUI();
+                window.location.href = "/pages/login.html";
+            });
+        }
     }
 }
 

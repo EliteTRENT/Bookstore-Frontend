@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const userId = localStorage.getItem('user_id');
 
     if (!token || !userId) {
-        alert("Please log in to view your cart.");
+        alert("Please log in to view your order summary.");
         window.location.href = '/pages/login.html';
         return;
     }
@@ -15,6 +15,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadCartItems(userId);
     await loadCustomerDetails(userId);
     await loadOrderSummary();
+
+    // Redirect to dashboard when clicking the logo
+    document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
+        window.location.href = "../pages/bookStoreDashboard.html";
+    });
 });
 
 function showToast(message, type = 'success') {
@@ -37,10 +42,25 @@ function showToast(message, type = 'success') {
 
 function setupUIEventListeners() {
     const cartIcon = document.getElementById('cartIcon');
+    const profileTrigger = document.getElementById('profileDropdownTrigger');
+    const profileDropdown = document.getElementById('profileDropdown');
 
     if (cartIcon) {
         cartIcon.addEventListener('click', () => {
             alert('You are already on the order summary page!');
+        });
+    }
+
+    if (profileTrigger && profileDropdown) {
+        profileTrigger.addEventListener("click", (e) => {
+            e.preventDefault();
+            profileDropdown.classList.toggle("active");
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!profileTrigger.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove("active");
+            }
         });
     }
 }
@@ -250,7 +270,6 @@ async function removeCartItem(button) {
         console.log("Remove response status:", response.status);
         console.log("Response headers:", [...response.headers.entries()]);
 
-        // Handle success status codes (200-299) and 204 No Content
         if (response.status === 204 || (response.status >= 200 && response.status < 300)) {
             console.log(`Item removed successfully (status ${response.status}), reloading cart...`);
             await loadCartItems(userId);
@@ -276,7 +295,6 @@ async function removeCartItem(button) {
             throw new Error(data.error || `HTTP error ${response.status}: Failed to remove item`);
         }
 
-        // Check for success in the response
         console.log("Checking success condition...");
         if (data.success || (data.message && data.message.toLowerCase().includes("successfully"))) {
             console.log("Success condition met, reloading cart...");
@@ -290,7 +308,6 @@ async function removeCartItem(button) {
     } catch (error) {
         console.error("Error removing item:", error.message);
         showToast(`Failed to remove item: ${error.message}`, 'error');
-        // Still attempt to reload the cart, in case the backend operation succeeded
         await loadCartItems(userId);
         await loadOrderSummary();
     }
@@ -299,67 +316,63 @@ async function removeCartItem(button) {
 function updateProfileUI() {
     const userName = localStorage.getItem("user_name") || "User";
     const firstName = userName.split(" ")[0];
+    const profileIcon = document.getElementById("profileDropdownTrigger");
+    const profileDropdown = document.getElementById("profileDropdown");
 
-    const profileIcon = document.querySelector("#cartProfileDropdownTrigger");
     if (profileIcon) {
         profileIcon.innerHTML = `<i class="fas fa-user"></i> ${firstName}`;
-    }
-
-    let profileDropdown = document.querySelector("#cartProfileDropdown");
-    if (!profileDropdown && profileIcon) {
-        profileDropdown = document.createElement("div");
-        profileDropdown.className = "bookstore-dash__profile-dropdown";
-        profileDropdown.id = "cartProfileDropdown";
-        document.querySelector(".bookstore-dash__header").appendChild(profileDropdown);
     }
 
     if (profileDropdown) {
         profileDropdown.innerHTML = `
             <div class="bookstore-dash__profile-item">Hello, ${userName}</div>
-            <div class="bookstore-dash__profile-item"><i class="fas fa-user"></i> Profile</div>
-            <div class="bookstore-dash__profile-item"><i class="fas fa-shopping-bag"></i> My Orders</div>
-            <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
+            <div class="bookstore-dash__profile-item bookstore-dash__profile-profile"><i class="fas fa-user"></i> Profile</div>
+            <div class="bookstore-dash__profile-item bookstore-dash__profile-orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
+            <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> Wishlist</div>
             <div class="bookstore-dash__profile-item bookstore-dash__profile-logout"><i class="fas fa-sign-out-alt"></i> Logout</div>
         `;
 
-        profileIcon.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            profileDropdown.classList.toggle("active");
-        });
+        const profileItem = profileDropdown.querySelector(".bookstore-dash__profile-profile");
+        if (profileItem) {
+            profileItem.addEventListener("click", () => {
+                window.location.href = "../pages/profile.html";
+            });
+        }
 
-        document.addEventListener("click", (e) => {
-            if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
-                profileDropdown.classList.remove("active");
-            }
-        });
+        const ordersItem = profileDropdown.querySelector(".bookstore-dash__profile-orders");
+        if (ordersItem) {
+            ordersItem.addEventListener("click", () => {
+                window.location.href = "../pages/bookOrders.html";
+            });
+        }
 
         const wishlistItem = profileDropdown.querySelector(".bookstore-dash__profile-wishlist");
         if (wishlistItem) {
             wishlistItem.addEventListener("click", () => {
-                window.location.href = "/pages/bookWishlist.html";
+                window.location.href = "../pages/bookWishlist.html";
             });
         }
 
-        profileDropdown.querySelector(".bookstore-dash__profile-logout").addEventListener("click", () => {
-            localStorage.removeItem("user_id");
-            localStorage.removeItem("user_name");
-            localStorage.removeItem("token");
-            updateProfileUI();
-            window.location.href = "/pages/login.html";
-        });
+        const logoutItem = profileDropdown.querySelector(".bookstore-dash__profile-logout");
+        if (logoutItem) {
+            logoutItem.addEventListener("click", () => {
+                localStorage.removeItem("user_id");
+                localStorage.removeItem("user_name");
+                localStorage.removeItem("token");
+                updateProfileUI();
+                window.location.href = "/pages/login.html";
+            });
+        }
     }
 }
 
 async function loadCustomerDetails(userId) {
-    // Retrieve user and address data from localStorage
     const userData = {
         name: localStorage.getItem('user_name') || 'User',
         number: localStorage.getItem('mobile_number') || ''
     };
     let selectedAddress = JSON.parse(localStorage.getItem('selectedAddress') || '{}');
 
-    // If selectedAddress is not set in localStorage, fetch it from the API as a fallback
     if (!selectedAddress.id) {
         try {
             const response = await fetch(`${API_BASE_URL}/addresses/list`, {
@@ -383,7 +396,6 @@ async function loadCustomerDetails(userId) {
 
             const data = await response.json();
 
-            // Update user data in localStorage if not already set
             if (data.user) {
                 if (!localStorage.getItem('user_name')) {
                     localStorage.setItem('user_name', data.user.name || 'User');
@@ -395,7 +407,6 @@ async function loadCustomerDetails(userId) {
                 userData.number = localStorage.getItem('mobile_number');
             }
 
-            // Use the first address as a fallback if selectedAddress is not set
             const firstAddress = data.addresses && data.addresses.length > 0 ? data.addresses[0] : {};
             if (firstAddress.id) {
                 selectedAddress = {
@@ -417,7 +428,6 @@ async function loadCustomerDetails(userId) {
         }
     }
 
-    // Populate the UI with the data from localStorage
     populateCustomerDetails(userData, selectedAddress);
 }
 
@@ -449,8 +459,6 @@ async function loadOrderSummary() {
     const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
     const selectedAddress = JSON.parse(localStorage.getItem('selectedAddress') || '{}');
 
-    console.log("Cart Items:", cartItems);
-
     if (!cartItems.length) {
         alert("Your cart is empty. Please add items to proceed.");
         window.location.href = '/pages/bookStoreDashboard.html';
@@ -459,6 +467,7 @@ async function loadOrderSummary() {
 
     if (!selectedAddress.id) {
         alert("No address selected. Please select an address.");
+        window.location.href = '/pages/customerdetails.html';
         return;
     }
 
@@ -496,9 +505,8 @@ async function loadOrderSummary() {
         <button class="checkout">CHECKOUT</button>
     `;
 
-    // Remove any existing event listeners to prevent duplicates
     const checkoutButton = document.querySelector('.checkout');
-    checkoutButton.removeEventListener('click', handleCheckout); // Remove previous listener if it exists
+    checkoutButton.removeEventListener('click', handleCheckout);
     checkoutButton.addEventListener('click', handleCheckout);
 }
 
@@ -508,10 +516,7 @@ async function handleCheckout() {
     let remainingCartItems = [...cartItems];
     let allOrdersSuccessful = true;
 
-    console.log("Starting checkout process with cart items:", cartItems);
-
     try {
-        // Step 1: Fetch stock quantities for all books in the cart
         const bookIds = cartItems.map(item => item.book_id).join(',');
         const stockResponse = await fetch(`${API_BASE_URL}/books/stock?book_ids=${bookIds}`, {
             method: 'GET',
@@ -524,14 +529,11 @@ async function handleCheckout() {
         }
 
         const stockData = await stockResponse.json();
-        console.log("Stock data:", stockData);
-
         if (!stockData.success) {
             showToast(`Failed to fetch stock quantities: ${stockData.error || "Unknown error"}`, 'error');
             return;
         }
 
-        // Step 2: Validate stock quantities against requested quantities
         const stockMap = new Map(stockData.stock.map(item => [item.book_id, item.quantity]));
         const insufficientStockItems = [];
 
@@ -548,7 +550,6 @@ async function handleCheckout() {
             }
         }
 
-        // Step 3: If there are items with insufficient stock, show an error toast and stop
         if (insufficientStockItems.length > 0) {
             const errorMessages = insufficientStockItems.map(item =>
                 `Not enough stock for ${item.book_name}. Requested: ${item.requested}, Available: ${item.available}`
@@ -557,22 +558,10 @@ async function handleCheckout() {
             return;
         }
 
-        // Step 4: Proceed with placing orders if all stock checks pass
         for (const item of cartItems) {
-            console.log(`Processing item: Book ID ${item.book_id}`);
-
             const discountedPrice = parseFloat(item.discounted_price || item.price) || 0;
             const quantity = parseInt(item.quantity, 10) || 1;
             const itemTotal = (discountedPrice * quantity).toFixed(2);
-
-            console.log(`Sending order for Book ID ${item.book_id}:`, {
-                user_id: localStorage.getItem('user_id'),
-                address_id: selectedAddress.id,
-                book_id: item.book_id,
-                quantity: quantity,
-                price_at_purchase: discountedPrice,
-                total_price: itemTotal
-            });
 
             const response = await fetch(`${API_BASE_URL}/orders/create`, {
                 method: 'POST',
@@ -589,10 +578,7 @@ async function handleCheckout() {
                 })
             });
 
-            console.log(`Response status for Book ID ${item.book_id}:`, response.status);
-
             if (response.status === 401) {
-                console.log("Unauthorized response, redirecting to login");
                 alert("Session expired. Please log in again.");
                 localStorage.removeItem('token');
                 localStorage.removeItem('user_id');
@@ -603,10 +589,8 @@ async function handleCheckout() {
             }
 
             const orderData = await response.json();
-            console.log(`Response data for Book ID ${item.book_id}:`, JSON.stringify(orderData, null, 2));
 
             if (!response.ok) {
-                console.log(`Response not OK for Book ID ${item.book_id}`);
                 allOrdersSuccessful = false;
                 const errorMessage = orderData.error || orderData.errors || "Unknown error occurred";
                 if (errorMessage.includes("Invalid quantity")) {
@@ -619,7 +603,6 @@ async function handleCheckout() {
             }
 
             if (!(orderData.success || (response.status === 201 && orderData.message && orderData.message.trim() === "Order placed successfully"))) {
-                console.log(`Order not successful for Book ID ${item.book_id}`);
                 allOrdersSuccessful = false;
                 const errorMessage = orderData.error || orderData.errors || "Unknown error occurred";
                 if (errorMessage.includes("Invalid quantity")) {
@@ -631,27 +614,20 @@ async function handleCheckout() {
                 continue;
             }
 
-            console.log(`Order successful for Book ID ${item.book_id}, updating remaining cart items`);
-            remainingCartItems = remainingCartItems.filter(cartItem => cartItem.book_id && cartItem.book_id !== item.book_id);
-            console.log("Remaining cart items after update:", remainingCartItems);
+            remainingCartItems = remainingCartItems.filter(cartItem => cartItem.book_id !== item.book_id);
         }
 
-        console.log("Loop completed, allOrdersSuccessful:", allOrdersSuccessful);
-
         if (allOrdersSuccessful) {
-            console.log("All orders successful, clearing cart and redirecting");
             showToast("All orders placed successfully!", 'success');
             localStorage.removeItem('cartItems');
             localStorage.removeItem('selectedAddress');
             localStorage.removeItem('selected_address_id');
             window.location.href = '/pages/orderSuccessful.html';
         } else {
-            console.log("Some orders failed, updating cart with remaining items:", remainingCartItems);
             localStorage.setItem('cartItems', JSON.stringify(remainingCartItems));
             showToast("Some items were not ordered successfully. Please try again.", 'error');
         }
     } catch (error) {
-        console.log("Caught error in loop:", error);
         console.error(`Error placing order: ${error.message}`);
         localStorage.setItem('cartItems', JSON.stringify(remainingCartItems));
         showToast(`Failed to place order: ${error.message}`, 'error');
