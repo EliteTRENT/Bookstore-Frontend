@@ -34,7 +34,14 @@
                 <!-- Thumbnails can be added dynamically if multiple images are available -->
             </div>
             <div class="action-buttons">
-                <button class="add-to-bag" id="addToBagBtn">ADD TO BAG</button>
+                <div class="add-to-bag-container">
+                    <button class="add-to-bag" id="addToBagBtn">ADD TO BAG</button>
+                    <div class="quantity-selector" id="quantitySelector" style="display: none;">
+                        <button class="quantity-btn decrease">-</button>
+                        <input type="text" class="quantity-input" id="quantityInput" value="1" readonly>
+                        <button class="quantity-btn increase">+</button>
+                    </div>
+                </div>
                 <button class="wishlist" id="wishlistBtn"><i class="fas fa-heart wishlist-icon"></i> WISHLIST</button>
             </div>
         </div>
@@ -100,5 +107,4 @@
     </footer>
 
     <script src="../js/bookdetails.js"></script>
-</body>
 </html>

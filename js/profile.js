@@ -19,6 +19,47 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+// Validation functions
+function validateStreet(street) {
+    return street.length >= 5 && street.length <= 100;
+}
+
+function validateCity(city) {
+    return /^[a-zA-Z\s-]{2,50}$/.test(city);
+}
+
+function validateState(state) {
+    return /^[a-zA-Z\s]{2,50}$/.test(state);
+}
+
+function validateZipCode(zipCode) {
+    return /^[a-zA-Z0-9\s-]{3,10}$/.test(zipCode);
+}
+
+function validateCountry(country) {
+    return /^[a-zA-Z\s]{2,50}$/.test(country);
+}
+
+function validateForm(addressData) {
+    const errors = [];
+    if (!validateStreet(addressData.street)) {
+        errors.push("Street must be 5-100 characters");
+    }
+    if (!validateCity(addressData.city)) {
+        errors.push("City must be 2-50 letters, spaces, or hyphens");
+    }
+    if (!validateState(addressData.state)) {
+        errors.push("State must be 2-50 letters or spaces (no numbers)");
+    }
+    if (!validateZipCode(addressData.zip_code)) {
+        errors.push("Zip code must be 3-10 characters (letters, numbers, spaces, or hyphens)");
+    }
+    if (!validateCountry(addressData.country)) {
+        errors.push("Country must be 2-50 letters or spaces (no numbers)");
+    }
+    return errors;
+}
+
 // Profile Dropdown Functionality
 function updateProfileUI() {
     const userName = localStorage.getItem("user_name") || "User";
@@ -386,6 +427,22 @@ function setupEventListeners() {
     });
 
     if (addAddressForm) {
+        // Real-time validation
+        ['newStreet', 'newCity', 'newState', 'newZipCode', 'newCountry'].forEach(id => {
+            const input = document.getElementById(id);
+            input.addEventListener('input', () => {
+                let isValid = true;
+                switch(id) {
+                    case 'newStreet': isValid = validateStreet(input.value); break;
+                    case 'newCity': isValid = validateCity(input.value); break;
+                    case 'newState': isValid = validateState(input.value); break;
+                    case 'newZipCode': isValid = validateZipCode(input.value); break;
+                    case 'newCountry': isValid = validateCountry(input.value); break;
+                }
+                input.style.borderColor = isValid ? '#ddd' : 'red';
+            });
+        });
+
         addAddressForm.addEventListener("submit", (e) => {
             e.preventDefault();
             const addressData = {
@@ -397,12 +454,13 @@ function setupEventListeners() {
                 type: document.querySelector('input[name="newAddressType"]:checked').value
             };
 
-            if (addressData.street && addressData.city && addressData.state && addressData.zip_code && addressData.country && addressData.type) {
+            const errors = validateForm(addressData);
+            if (errors.length > 0) {
+                showToast(errors.join(", "), 'error');
+            } else {
                 addNewAddress(addressData);
                 addAddressModal.style.display = "none";
                 addAddressForm.reset();
-            } else {
-                showToast("All fields are required", 'error');
             }
         });
     }
@@ -425,6 +483,15 @@ function setupAddressEventListeners() {
                 });
                 addressItem.querySelectorAll(".address-input").forEach(input => {
                     input.style.display = "block";
+                    input.addEventListener('input', () => {
+                        let isValid = true;
+                        if (input.classList.contains('street-input')) isValid = validateStreet(input.value);
+                        else if (input.classList.contains('city-input')) isValid = validateCity(input.value);
+                        else if (input.classList.contains('state-input')) isValid = validateState(input.value);
+                        else if (input.classList.contains('zip-code-input')) isValid = validateZipCode(input.value);
+                        else if (input.classList.contains('country-input')) isValid = validateCountry(input.value);
+                        input.style.borderColor = isValid ? '#ddd' : 'red';
+                    });
                 });
                 
                 const updateBtn = addressItem.querySelector(".update-address-btn");
@@ -442,10 +509,11 @@ function setupAddressEventListeners() {
                     
                     console.log("Address data to update:", addressData); // Debug payload
                     
-                    if (addressData.street && addressData.city && addressData.state && addressData.zip_code && addressData.country) {
-                        updateAddress(addressId, addressData);
+                    const errors = validateForm(addressData);
+                    if (errors.length > 0) {
+                        showToast(errors.join(", "), "error");
                     } else {
-                        showToast("All fields are required", "error");
+                        updateAddress(addressId, addressData);
                     }
                 };
             } else {

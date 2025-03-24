@@ -202,7 +202,7 @@ function deleteReview(reviewId) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
       },
-      body: JSON.stringify({ user_id: userId }),
+      body: JSON.stringify({ user_id: userId })
     })
       .then((response) => {
         if (!response.ok) {
@@ -363,7 +363,6 @@ function addToWishlist(bookId) {
 }
 
 // Fetch Cart Count
-// Fetch Cart Count
 async function fetchCartCount() {
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('token');
@@ -443,7 +442,6 @@ function setupCartIconListener() {
 }
 
 // Profile Dropdown Functionality
-// Remove from Wishlist
 function removeFromWishlist(bookId) {
   fetch(`${BASE_URL}/api/v1/wishlists/destroy/${bookId}`, {
     method: "DELETE",
@@ -567,67 +565,164 @@ function updateProfileUI() {
 // Event Listeners for Buttons
 function setupEventListeners() {
   const addToBagBtn = document.getElementById("addToBagBtn");
+  const quantitySelector = document.getElementById("quantitySelector");
+  const quantityInput = document.getElementById("quantityInput");
+  const increaseBtn = quantitySelector.querySelector(".increase");
+  const decreaseBtn = quantitySelector.querySelector(".decrease");
+
   if (addToBagBtn) {
-    addToBagBtn.addEventListener("click", () => {
+      addToBagBtn.addEventListener("click", () => {
+          const userId = localStorage.getItem("user_id");
+          const token = localStorage.getItem("token");
+
+          if (!userId || !token) {
+              alert("Please log in to add this book to your bag.");
+              window.location.href = "../pages/login.html";
+              return;
+          }
+
+          // Prepare the data for adding to cart
+          const cartData = {
+              cart: {
+                  user_id: parseInt(userId),
+                  book_id: parseInt(bookId),
+                  quantity: parseInt(quantityInput.value) || 1 // Use the current quantity
+              }
+          };
+
+          fetch(`${BASE_URL}/api/v1/carts/add`, {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify(cartData)
+          })
+              .then((response) => {
+                  if (!response.ok) {
+                      return response.json().then((err) => {
+                          throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+                      });
+                  }
+                  return response.json();
+              })
+              .then((data) => {
+                  console.log("Add to Cart Response:", data);
+                  if (data.message) {
+                      alert("Book added to cart successfully!");
+                      // Hide the "ADD TO BAG" button and show the quantity selector
+                      addToBagBtn.style.display = "none";
+                      quantitySelector.style.display = "flex";
+                      fetchCartCount(); // Update cart count after adding
+                  } else {
+                      const errorMessage = Array.isArray(data.errors)
+                          ? data.errors.join(", ")
+                          : data.error || "Unknown error occurred";
+                      alert(`Error: ${errorMessage}`);
+                  }
+              })
+              .catch((error) => {
+                  console.error("Error adding to cart:", error.message);
+                  if (error.message.includes("401")) {
+                      alert("Session expired. Please log in again.");
+                      localStorage.removeItem("user_id");
+                      localStorage.removeItem("user_name");
+                      localStorage.removeItem("token");
+                      window.location.href = "../pages/login.html";
+                  } else {
+                      alert("Failed to add book to cart: " + error.message);
+                  }
+              });
+      });
+  }
+
+  // Add event listeners for quantity buttons
+  if (increaseBtn && decreaseBtn) {
+      increaseBtn.addEventListener("click", () => updateQuantity(1));
+      decreaseBtn.addEventListener("click", () => updateQuantity(-1));
+  }
+
+  // Function to update quantity
+  function updateQuantity(change) {
       const userId = localStorage.getItem("user_id");
       const token = localStorage.getItem("token");
+      let currentQuantity = parseInt(quantityInput.value);
 
-      if (!userId || !token) {
-        alert("Please log in to add this book to your bag.");
-        window.location.href = "../pages/login.html";
-        return;
+      if (isNaN(currentQuantity)) {
+          currentQuantity = 1;
       }
 
-      // Prepare the data for adding to cart
+      const newQuantity = currentQuantity + change;
+
+      if (newQuantity <= 0) {
+          // If quantity becomes 0, remove the book from the cart
+          fetch(`${BASE_URL}/api/v1/remove_book/${bookId}`, {
+              method: "DELETE",
+              headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`
+              }
+          })
+              .then((response) => {
+                  if (!response.ok && response.status !== 404) {
+                      throw new Error(`HTTP error! Status: ${response.status}`);
+                  }
+                  return response.status === 204 ? {} : response.json();
+              })
+              .then((data) => {
+                  alert("Book removed from cart!");
+                  // Show the "ADD TO BAG" button and hide the quantity selector
+                  addToBagBtn.style.display = "block";
+                  quantitySelector.style.display = "none";
+                  quantityInput.value = "1"; // Reset quantity
+                  fetchCartCount(); // Update cart count
+              })
+              .catch((error) => {
+                  console.error("Error removing book from cart:", error.message);
+                  alert("Failed to remove book from cart: " + error.message);
+              });
+          return;
+      }
+
+      // Update quantity in the cart
       const cartData = {
-        cart: {
-          user_id: parseInt(userId),
-          book_id: parseInt(bookId),
-          quantity: 1 // Default quantity of 1
-        }
+          cart: {
+              book_id: parseInt(bookId),
+              quantity: newQuantity
+          }
       };
 
-      fetch(`${BASE_URL}/api/v1/carts/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(cartData)
+      fetch(`${BASE_URL}/api/v1/carts/update_quantity`, {
+          method: "PATCH",
+          headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(cartData)
       })
-        .then((response) => {
-          if (!response.ok) {
-            return response.json().then((err) => {
-              throw new Error(err.error || `HTTP error! Status: ${response.status}`);
-            });
-          }
-          return response.json();
-        })
-        .then((data) => {
-          console.log("Add to Cart Response:", data);
-          if (data.message) {
-            alert("Book added to cart successfully!");
-            fetchCartCount(); // Update cart count after adding
-          } else {
-            const errorMessage = Array.isArray(data.errors)
-              ? data.errors.join(", ")
-              : data.error || "Unknown error occurred";
-            alert(`Error: ${errorMessage}`);
-          }
-        })
-        .catch((error) => {
-          console.error("Error adding to cart:", error.message);
-          if (error.message.includes("401")) {
-            alert("Session expired. Please log in again.");
-            localStorage.removeItem("user_id");
-            localStorage.removeItem("user_name");
-            localStorage.removeItem("token");
-            window.location.href = "../pages/login.html";
-          } else {
-            alert("Failed to add book to cart: " + error.message);
-          }
-        });
-    });
+          .then((response) => {
+              if (!response.ok) {
+                  return response.json().then((err) => {
+                      throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+                  });
+              }
+              return response.json();
+          })
+          .then((data) => {
+              if (data.success) {
+                  quantityInput.value = newQuantity;
+                  fetchCartCount(); // Update cart count
+              } else {
+                  const errorMessage = Array.isArray(data.errors)
+                      ? data.errors.join(", ")
+                      : data.error || "Unknown error occurred";
+                  alert(`Error: ${errorMessage}`);
+              }
+          })
+          .catch((error) => {
+              console.error("Error updating quantity:", error.message);
+              alert("Failed to update quantity: " + error.message);
+          });
   }
 
   if (wishlistBtn) {
