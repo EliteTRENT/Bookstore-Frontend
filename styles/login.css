@@ -254,6 +254,37 @@ input:focus {
   font-size: 1rem;
 }
 
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  min-width: 200px;
+  padding: 10px 20px;
+  border-radius: 4px;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 9999;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  font-family: 'Montserrat', Arial, sans-serif;
+}
+
+.toast-success {
+  background-color: #28a745; /* Green */
+}
+
+.toast-error {
+  background-color: #dc3545; /* Red */
+}
+
+.toast-info {
+  background-color: #17a2b8; /* Cyan */
+}
+
+.toast.show {
+  opacity: 1;
+}
+
 @media (max-width: 48rem) {
   .container {
     width: 90%;
