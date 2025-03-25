@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   const loginForm = document.getElementById("loginForm");
   if (!loginForm) {
+    console.log("Login form not found in DOM");
     return;
   }
 
@@ -13,8 +14,30 @@ document.addEventListener("DOMContentLoaded", function () {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|ask)\.[a-zA-Z]{2,}$/;
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!#%*?&])[A-Za-z\d@$!%#*?&]{8,}$/;
 
-  // Google Sign-In Setup (unchanged)
-  const GOOGLE_CLIENT_ID = "892883759524-crgr5ag4eu4o21c1ginihfbsouhm9u1v.apps.googleusercontent.com";
+  // Toast Notification Function
+  function showToast(message, type = "info") {
+    console.log(`Showing toast: ${message} (type: ${type})`);
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add("show");
+      console.log("Toast should be visible now");
+    }, 100);
+
+    setTimeout(() => {
+      toast.classList.remove("show");
+      console.log("Toast fading out");
+      setTimeout(() => {
+        toast.remove();
+        console.log("Toast removed from DOM");
+      }, 300);
+    }, 3000);
+  }
+
+  const GOOGLE_CLIENT_ID = window.env.GOOGLE_CLIENT_ID;
 
   window.handleGoogleSignIn = function (response) {
     const idToken = response.credential;
@@ -32,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!response.ok) {
           return response.text().then(text => {
             try {
-              const err = JSON.parse(text); // Try parsing as JSON
+              const err = JSON.parse(text);
               throw new Error(err.details || err.error || "Google login failed");
             } catch {
               throw new Error(`Google login failed: Unexpected response - ${text}`);
@@ -49,15 +72,14 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("email", result.email);
         localStorage.setItem("mobile_number", result.mobile_number);
         console.log("Stored token:", result.token);
-        const tokenParts = result.token.split(".");
-        const payload = JSON.parse(atob(tokenParts[1]));
-        console.log("Google token payload:", payload);
-        alert(result.message || "Google login successful!");
-        window.location.href = "bookStoreDashboard.html";
+        showToast(result.message || "Login successful!", "success");
+        setTimeout(() => {
+          window.location.href = "bookStoreDashboard.html";
+        }, 1000); // Delay redirect to show toast
       })
       .catch(error => {
         console.error("Google Sign-In error:", error);
-        alert(error.message); // Show the exact error from backend
+        showToast(error.message, "error");
       });
   };
 
@@ -98,23 +120,28 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 100);
   }
 
+  // Field Validation
   function validateField(field, regex, emptyMessage, invalidMessage) {
     field.addEventListener("input", () => {
       const value = field.value.trim();
       if (!value) {
         field.setCustomValidity(emptyMessage);
+        field.classList.add("error");
       } else if (!regex.test(value)) {
         field.setCustomValidity(invalidMessage);
+        field.classList.add("error");
       } else {
         field.setCustomValidity("");
+        field.classList.remove("error");
       }
       field.reportValidity();
     });
   }
 
-  validateField(emailField, emailRegex, "Email is required.", "Email must end with @gmail, @yahoo, or @ask and have a valid domain.");
-  validateField(passwordField, passwordRegex, "Password is required.", "Min 8 chars, 1 upper, 1 lower, 1 digit, 1 special char.");
+  validateField(emailField, emailRegex, "Email is required.", "Must be @gmail, @yahoo, or @ask.");
+  validateField(passwordField, passwordRegex, "Password is required.", "Min 8 chars, 1 upper, 1 lower, 1 digit, 1 special.");
 
+  // Form Submission
   loginForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
@@ -122,12 +149,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const password = passwordField.value.trim();
 
     if (!email || !password) {
-      alert("Please fill in all required fields.");
+      showToast("Please fill in all required fields.", "error");
       return;
     }
 
     if (!emailRegex.test(email) || !passwordRegex.test(password)) {
-      alert("Invalid email or password format.");
+      showToast("Invalid email or password format.", "error");
       return;
     }
 
@@ -146,7 +173,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       console.log("Normal login response status:", response.status);
-
       const result = await response.json();
 
       if (response.ok) {
@@ -158,35 +184,40 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("email", result.email);
         localStorage.setItem("mobile_number", result.mobile_number);
         console.log("Stored token:", localStorage.getItem("token"));
-        alert(result.message || "Login successful!");
+        showToast(result.message || "Login successful!", "success");
         loginForm.reset();
-        window.location.href = "bookStoreDashboard.html";
+        setTimeout(() => {
+          window.location.href = "bookStoreDashboard.html";
+        }, 1000); // Delay redirect to show toast
       } else {
-        // Error case - display backend error
+        // Error case - backend-specific messages
         console.error("Normal login error response:", result);
-        alert(result.errors || "Failed to login. Check your credentials.");
+        if (result.errors === "Email not registered.") {
+          showToast("Email not registered", "error");
+        } else if (result.errors === "Invalid password.") {
+          showToast("Wrong email or password", "error");
+        } else {
+          showToast(result.errors || "Failed to login. Check your credentials.", "error");
+        }
       }
     } catch (error) {
       console.error("Normal login error:", error);
-      alert("Network error: Unable to reach server.");
+      showToast("Network error: Unable to reach server.", "error");
     } finally {
       submitButton.disabled = false;
       submitButton.textContent = "Login";
     }
   });
 
+  // Password Toggle
   togglePassword.addEventListener("click", function () {
-    if (passwordField.type === "password") {
-      passwordField.type = "text";
-      togglePassword.classList.remove("fa-eye");
-      togglePassword.classList.add("fa-eye-slash");
-    } else {
-      passwordField.type = "password";
-      togglePassword.classList.remove("fa-eye-slash");
-      togglePassword.classList.add("fa-eye");
-    }
+    const isPassword = passwordField.type === "password";
+    passwordField.type = isPassword ? "text" : "password";
+    togglePassword.classList.toggle("fa-eye", !isPassword);
+    togglePassword.classList.toggle("fa-eye-slash", isPassword);
   });
 
+  // Signup Tab Navigation
   const signupTab = document.getElementById("signup-tab");
   if (signupTab) {
     signupTab.addEventListener("click", function () {

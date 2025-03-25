@@ -15,26 +15,21 @@ const BASE_URL = "http://127.0.0.1:3000";
 let debounceTimeout = null;
 let abortController = null;
 
-// Get token and user ID from localStorage
+// Get token and user ID from localStorage (optional for logged-in users)
 const token = localStorage.getItem("token");
 const userId = localStorage.getItem("user_id");
 
-// Check authentication on load
-if (!token || !userId) {
-  console.error("Missing token or user_id in localStorage", { token, userId });
-  alert("Session expired: Please log in");
-  window.location.href = "../pages/login.html";
-}
+// Headers with token (only used if token exists)
+const headers = token
+  ? {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    }
+  : { "Content-Type": "application/json" };
 
-// Headers with token
-const headers = {
-  "Content-Type": "application/json",
-  "Authorization": `Bearer ${token}`
-};
-
-// Fetch Cart Count
+// Fetch Cart Count (only for logged-in users)
 async function fetchCartCount() {
-  if (!userId || !token) {
+  if (!token || !userId) {
     updateCartCount(0);
     return;
   }
@@ -76,10 +71,11 @@ function updateCartCount(count) {
   const cartIcon = document.getElementById("cartIcon");
   if (cartIcon) {
     cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${count})`;
+    cartIcon.style.display = token ? "block" : "none"; // Hide cart if not logged in
   }
 }
 
-// Fetch Books from Backend
+// Fetch Books from Backend (works for both logged-in and logged-out users)
 function fetchBooks(page = 1, sort = "relevance") {
   if (abortController) {
     abortController.abort();
@@ -91,7 +87,6 @@ function fetchBooks(page = 1, sort = "relevance") {
     url += `&sort_by=${encodeURIComponent(sort)}`;
   }
 
-  console.log("Fetching books with token:", token);
   fetch(url, {
     method: "GET",
     headers: headers,
@@ -100,7 +95,7 @@ function fetchBooks(page = 1, sort = "relevance") {
     .then(response => {
       if (!response.ok) {
         console.error(`Books fetch failed with status: ${response.status}`);
-        if (response.status === 401) {
+        if (response.status === 401 && token) {
           alert("Session expired");
           localStorage.clear();
           window.location.href = "../pages/login.html";
@@ -132,7 +127,7 @@ function fetchBooks(page = 1, sort = "relevance") {
     });
 }
 
-// Fetch Search Suggestions
+// Fetch Search Suggestions (works for both logged-in and logged-out users)
 function searchBooks(query) {
   if (abortController) {
     abortController.abort();
@@ -144,7 +139,6 @@ function searchBooks(query) {
     return;
   }
 
-  console.log("Fetching search suggestions with token:", token);
   fetch(`${BASE_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
     method: "GET",
     headers: headers,
@@ -153,7 +147,7 @@ function searchBooks(query) {
     .then(response => {
       if (!response.ok) {
         console.error(`Search fetch failed with status: ${response.status}`);
-        if (response.status === 401) {
+        if (response.status === 401 && token) {
           alert("Session expired");
           localStorage.clear();
           window.location.href = "../pages/login.html";
@@ -185,7 +179,7 @@ function searchBooks(query) {
     });
 }
 
-// Render Books to the Grid (unchanged)
+// Render Books to the Grid
 function renderBooks(books) {
   bookGrid.innerHTML = "";
   if (!books || books.length === 0) {
@@ -223,7 +217,7 @@ function renderBooks(books) {
   });
 }
 
-// Add a Book Card to the UI (unchanged)
+// Add a Book Card to the UI
 function addBookToUI(name, author, image, discounted_price, mrp, quantity, averageRating, totalReviews, bookId) {
   const bookCard = document.createElement("div");
   bookCard.className = "bookstore-dash__book-card";
@@ -249,7 +243,7 @@ function addBookToUI(name, author, image, discounted_price, mrp, quantity, avera
   bookGrid.appendChild(bookCard);
 }
 
-// Render Pagination (unchanged)
+// Render Pagination
 function renderPagination(pagination) {
   currentPage = pagination.current_page;
   const totalPages = pagination.total_pages;
@@ -296,7 +290,7 @@ function renderPagination(pagination) {
   };
 }
 
-// Event Listeners (unchanged)
+// Event Listeners
 searchInput.addEventListener("input", e => {
   const query = e.target.value.trim();
   if (debounceTimeout) clearTimeout(debounceTimeout);
@@ -307,24 +301,33 @@ sortSelect.addEventListener("change", () => {
   fetchBooks(1, sortSelect.value);
 });
 
-// Profile Dropdown Functionality (unchanged)
-const profileIcon = document.querySelector("#profileDropdownTrigger");
+// Profile Dropdown Functionality
 function updateProfileUI() {
-  const userName = localStorage.getItem("user_name") || "User";
+  const profileIcon = document.querySelector("#profileDropdownTrigger");
+  if (!profileIcon) return;
+
+  // Set the profile icon text (always show "Guest" or firstName, dropdown will handle the rest)
+  const userName = token && userId ? (localStorage.getItem("user_name") || "Guest") : "Guest";
   const firstName = userName.split(" ")[0];
+  profileIcon.innerHTML = `<i class="fas fa-user"></i> ${firstName}`;
 
-  if (profileIcon) {
-    profileIcon.innerHTML = `<i class="fas fa-user"></i> ${firstName}`;
-  }
-
+  // Create or update the dropdown
   let profileDropdown = document.querySelector(".bookstore-dash__profile-dropdown");
-  if (!profileDropdown && profileIcon) {
+  if (!profileDropdown) {
     profileDropdown = document.createElement("div");
     profileDropdown.className = "bookstore-dash__profile-dropdown";
     document.querySelector(".bookstore-dash__header").appendChild(profileDropdown);
   }
 
-  if (profileDropdown) {
+  // Set dropdown content based on login status
+  if (!token || !userId) {
+    profileDropdown.innerHTML = `
+      <div class="bookstore-dash__profile-item">Hello, Guest</div>
+      <div class="bookstore-dash__profile-item bookstore-dash__profile-login"><i class="fas fa-sign-in-alt"></i> Login</div>
+      <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
+      <div class="bookstore-dash__profile-item bookstore-dash__profile-orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
+    `;
+  } else {
     profileDropdown.innerHTML = `
       <div class="bookstore-dash__profile-item">Hello, ${userName}</div>
       <div class="bookstore-dash__profile-item bookstore-dash__profile-profile"><i class="fas fa-user"></i> Profile</div>
@@ -332,44 +335,42 @@ function updateProfileUI() {
       <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
       <div class="bookstore-dash__profile-item bookstore-dash__profile-logout">Logout</div>
     `;
+  }
 
-    profileIcon.addEventListener("click", e => {
-      e.preventDefault();
-      profileDropdown.classList.toggle("active");
+  // Toggle dropdown on click
+  profileIcon.addEventListener("click", e => {
+    e.preventDefault();
+    profileDropdown.classList.toggle("active");
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", e => {
+    if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
+      profileDropdown.classList.remove("active");
+    }
+  });
+
+  // Add event listeners for dropdown items
+  if (!token || !userId) {
+    profileDropdown.querySelector(".bookstore-dash__profile-login").addEventListener("click", () => {
+      window.location.href = "../pages/login.html";
     });
-
-    document.addEventListener("click", e => {
-      if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
-        profileDropdown.classList.remove("active");
-      }
+    profileDropdown.querySelector(".bookstore-dash__profile-wishlist").addEventListener("click", () => {
+      window.location.href = "../pages/bookWishlist.html";
     });
-
-    const profileItem = profileDropdown.querySelector(".bookstore-dash__profile-profile");
-    if (profileItem) {
-      profileItem.addEventListener("click", () => {
-        if (!localStorage.getItem("user_id")) {
-          alert("Please log in to view your profile.");
-          window.location.href = "../pages/login.html";
-          return;
-        }
-        window.location.href = "../pages/profile.html";
-      });
-    }
-
-    const ordersItem = profileDropdown.querySelector(".bookstore-dash__profile-orders");
-    if (ordersItem) {
-      ordersItem.addEventListener("click", () => {
-        window.location.href = "../pages/bookOrders.html";
-      });
-    }
-
-    const wishlistItem = profileDropdown.querySelector(".bookstore-dash__profile-wishlist");
-    if (wishlistItem) {
-      wishlistItem.addEventListener("click", () => {
-        window.location.href = "../pages/bookWishlist.html";
-      });
-    }
-
+    profileDropdown.querySelector(".bookstore-dash__profile-orders").addEventListener("click", () => {
+      window.location.href = "../pages/bookOrders.html";
+    });
+  } else {
+    profileDropdown.querySelector(".bookstore-dash__profile-profile").addEventListener("click", () => {
+      window.location.href = "../pages/profile.html";
+    });
+    profileDropdown.querySelector(".bookstore-dash__profile-orders").addEventListener("click", () => {
+      window.location.href = "../pages/bookOrders.html";
+    });
+    profileDropdown.querySelector(".bookstore-dash__profile-wishlist").addEventListener("click", () => {
+      window.location.href = "../pages/bookWishlist.html";
+    });
     profileDropdown.querySelector(".bookstore-dash__profile-logout").addEventListener("click", () => {
       localStorage.clear();
       updateProfileUI();
@@ -378,11 +379,15 @@ function updateProfileUI() {
   }
 }
 
-// Cart Icon Click Functionality (unchanged)
+// Cart Icon Click Functionality
 function setupCartIconListener() {
   const cartIcon = document.getElementById("cartIcon");
   if (cartIcon) {
     cartIcon.addEventListener("click", () => {
+      if (!token || !userId) {
+        window.location.href = "../pages/mycart.html"; // Direct redirect, no alert
+        return;
+      }
       window.location.href = "../pages/mycart.html";
     });
   }
@@ -392,4 +397,4 @@ function setupCartIconListener() {
 updateProfileUI();
 setupCartIconListener();
 fetchBooks();
-fetchCartCount();
+if (token && userId) fetchCartCount();

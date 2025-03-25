@@ -80,7 +80,7 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
           }, 2500);
       } else {
           messageDiv.style.color = 'red';
-          messageDiv.textContent = data.error || 'Failed to reset password.';
+          messageDiv.textContent = data.error || 'Invalid OTP';
       }
   } catch (error) {
       messageDiv.style.color = 'red';

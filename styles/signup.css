@@ -51,7 +51,6 @@ body {
   border-bottom-left-radius: 0.75rem;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-  overflow: hidden;
   z-index: 1;
 }
 
@@ -211,6 +210,39 @@ input.error {
   background-color: #a00000;
 }
 
+/* Toast Notification Styles */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  min-width: 200px;
+  padding: 10px 20px;
+  border-radius: 4px;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 9999; /* Increased to ensure visibility */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Stronger shadow for prominence */
+  font-family: 'Montserrat', Arial, sans-serif; /* Matches body font */
+}
+
+.toast-success {
+  background-color: #28a745; /* Green for success */
+}
+
+.toast-error {
+  background-color: #dc3545; /* Red for error */
+}
+
+.toast-info {
+  background-color: #17a2b8; /* Cyan for info */
+}
+
+.toast.show {
+  opacity: 1;
+}
+
+/* Media Queries */
 @media (max-width: 48rem) {
   .container {
     width: 90%;
