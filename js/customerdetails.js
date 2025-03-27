@@ -252,7 +252,7 @@ async function updateQuantity(button, change) {
         };
         console.log("Sending request to update quantity:", requestBody);
 
-        const response = await fetch(`${API_BASE_URL}/carts/update_quantity`, {
+        const response = await fetch(`${API_BASE_URL}/carts`, {
             method: 'PATCH',
             headers: getAuthHeaders(),
             body: JSON.stringify(requestBody)
@@ -403,7 +403,7 @@ function updateProfileUI() {
 
 async function loadCustomerDetails(userId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/addresses/list`, {
+        const response = await fetch(`${API_BASE_URL}/addresses`, {
             method: 'GET',
             headers: getAuthHeaders()
         });
@@ -505,8 +505,14 @@ async function saveCustomerDetails(userId) {
 
 async function addNewAddress(addressData) {
     const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Please log in first.");
+        window.location.href = "/pages/login.html";
+        return;
+    }
+
     try {
-        const response = await fetch(`${API_BASE_URL}/addresses/add`, {
+        const response = await fetch(`${API_BASE_URL}/addresses`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -525,20 +531,24 @@ async function addNewAddress(addressData) {
                 window.location.href = "/pages/login.html";
                 return;
             }
+
             const text = await response.text();
+            let errorMessage = "Failed to add address";
             try {
                 const errorData = JSON.parse(text);
-                throw new Error(errorData.errors || "Failed to add address");
+                // Check if 'message' is an array and join it, or use it directly
+                if (errorData.message) {
+                    errorMessage = Array.isArray(errorData.message) 
+                        ? errorData.message.join(", ") 
+                        : errorData.message;
+                }
             } catch {
-                throw new Error("Server returned an unexpected response: " + text.slice(0, 100));
+                errorMessage = "Server error: " + text.slice(0, 100);
             }
+            throw new Error(errorMessage);
         }
 
         const result = await response.json();
-        if (result.success === false) {
-            throw new Error(result.error || "Failed to add address");
-        }
-
         showToast(result.message || "Address added successfully!");
 
         if (result.address) {
@@ -559,7 +569,7 @@ async function addNewAddress(addressData) {
             await loadCustomerDetails(localStorage.getItem("user_id"));
         }
     } catch (error) {
-        showToast("Failed to add address: " + error.message, 'error');
+        showToast(error.message, 'error');
     }
 }
 

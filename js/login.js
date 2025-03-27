@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
     submitButton.textContent = "Logging in...";
 
     try {
-      const response = await fetch("http://localhost:3000/api/v1/users/login", {
+      const response = await fetch("http://localhost:3000/api/v1/sessions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

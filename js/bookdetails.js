@@ -22,7 +22,7 @@ const wishlistBtn = document.getElementById("wishlistBtn");
 
 // Fetch Book Details
 function fetchBookDetails(bookId) {
-  fetch(`${BASE_URL}/api/v1/books/show/${bookId}`, {
+  fetch(`${BASE_URL}/api/v1/books/${bookId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -315,7 +315,7 @@ function addToWishlist(bookId) {
     },
   };
 
-  fetch(`${BASE_URL}/api/v1/wishlists/add`, {
+  fetch(`${BASE_URL}/api/v1/wishlists`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -443,7 +443,7 @@ function setupCartIconListener() {
 
 // Profile Dropdown Functionality
 function removeFromWishlist(bookId) {
-  fetch(`${BASE_URL}/api/v1/wishlists/destroy/${bookId}`, {
+  fetch(`${BASE_URL}/api/v1/wishlists/${bookId}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -590,7 +590,7 @@ function setupEventListeners() {
               }
           };
 
-          fetch(`${BASE_URL}/api/v1/carts/add`, {
+          fetch(`${BASE_URL}/api/v1/carts`, {
               method: "POST",
               headers: {
                   "Content-Type": "application/json",
@@ -656,7 +656,7 @@ function setupEventListeners() {
 
       if (newQuantity <= 0) {
           // If quantity becomes 0, remove the book from the cart
-          fetch(`${BASE_URL}/api/v1/remove_book/${bookId}`, {
+          fetch(`${BASE_URL}/api/v1/carts/${bookId}`, {
               method: "DELETE",
               headers: {
                   "Content-Type": "application/json",
@@ -692,7 +692,7 @@ function setupEventListeners() {
           }
       };
 
-      fetch(`${BASE_URL}/api/v1/carts/update_quantity`, {
+      fetch(`${BASE_URL}/api/v1/carts`, {
           method: "PATCH",
           headers: {
               "Content-Type": "application/json",
@@ -760,7 +760,7 @@ function setupEventListeners() {
         },
       };
 
-      fetch(`${BASE_URL}/api/v1/reviews/add`, {
+      fetch(`${BASE_URL}/api/v1/reviews`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

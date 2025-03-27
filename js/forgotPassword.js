@@ -27,7 +27,7 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
     button.textContent = 'Sending...';
 
     try {
-        const response = await fetch('http://localhost:3000/api/v1/users/forget', {
+        const response = await fetch('http://localhost:3000/api/v1/users/password/forgot', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

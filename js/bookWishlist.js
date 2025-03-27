@@ -146,7 +146,7 @@ function fetchWishlist() {
 
     console.log("User is logged in. Fetching wishlist data...");
 
-    fetch(`${BASE_URL}/api/v1/wishlists/getAll`, {
+    fetch(`${BASE_URL}/api/v1/wishlists`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -283,8 +283,8 @@ function deleteWishlistItem(wishlistId) {
     }
 
     if (confirm("Are you sure you want to remove this book from your wishlist?")) {
-        fetch(`${BASE_URL}/api/v1/wishlists/destroyByWishlistId/${wishlistId}`, {
-            method: "DELETE",
+        fetch(`${BASE_URL}/api/v1/wishlists/${wishlistId}`, {
+            method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`

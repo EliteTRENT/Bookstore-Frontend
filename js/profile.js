@@ -189,7 +189,7 @@ async function loadUserData() {
         document.getElementById("email").textContent = email || "[Not Available]";
         document.getElementById("mobile_number").textContent = mobileNumber || "[Not Available]";
 
-        const addressResponse = await fetch(`${BASE_URL}/api/v1/addresses/list`, {
+        const addressResponse = await fetch(`${BASE_URL}/api/v1/addresses`, {
             method: "GET",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -296,7 +296,7 @@ async function loadUserData() {
 async function addNewAddress(addressData) {
     const token = localStorage.getItem("token");
     try {
-        const response = await fetch(`${BASE_URL}/api/v1/addresses/add`, {
+        const response = await fetch(`${BASE_URL}/api/v1/addresses`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -329,7 +329,7 @@ async function updateAddress(addressId, addressData) {
     const token = localStorage.getItem("token");
     try {
         console.log("Sending update payload:", addressData);
-        const response = await fetch(`${BASE_URL}/api/v1/addresses/update/${addressId}`, {
+        const response = await fetch(`${BASE_URL}/api/v1/addresses/${addressId}`, {
             method: "PATCH",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -361,7 +361,7 @@ async function updateAddress(addressId, addressData) {
 async function removeAddress(addressId) {
     const token = localStorage.getItem("token");
     try {
-        const response = await fetch(`${BASE_URL}/api/v1/addresses/remove/${addressId}`, {
+        const response = await fetch(`${BASE_URL}/api/v1/addresses/${addressId}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,

@@ -52,7 +52,7 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
   button.textContent = 'Resetting...';
 
   try {
-      const url = `http://localhost:3000/api/v1/users/reset/${userId}`;
+      const url = `http://localhost:3000/api/v1/users/password/reset/${userId}`;
       console.log('Fetching URL:', url);
       const response = await fetch(url, {
           method: 'POST',

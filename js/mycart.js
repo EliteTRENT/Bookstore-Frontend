@@ -218,7 +218,7 @@ async function updateQuantity(button, change) {
             }
         };
 
-        const response = await fetch(`${API_BASE_URL}/carts/update_quantity`, {
+        const response = await fetch(`${API_BASE_URL}/carts`, {
             method: 'PATCH',
             headers: getAuthHeaders(),
             body: JSON.stringify(requestBody)
@@ -258,7 +258,7 @@ async function removeCartItem(button) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/remove_book/${bookId}`, {
+        const response = await fetch(`${API_BASE_URL}/carts/${bookId}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });

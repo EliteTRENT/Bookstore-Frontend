@@ -220,7 +220,7 @@ async function updateQuantity(button, change) {
             }
         };
 
-        const response = await fetch(`${API_BASE_URL}/carts/update_quantity`, {
+        const response = await fetch(`${API_BASE_URL}/carts`, {
             method: 'PATCH',
             headers: getAuthHeaders(),
             body: JSON.stringify(requestBody)
@@ -262,7 +262,7 @@ async function removeCartItem(button) {
 
     try {
         console.log(`Removing item with bookId: ${bookId}`);
-        const response = await fetch(`${API_BASE_URL}/remove_book/${bookId}`, {
+        const response = await fetch(`${API_BASE_URL}/carts/${bookId}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
@@ -375,7 +375,7 @@ async function loadCustomerDetails(userId) {
 
     if (!selectedAddress.id) {
         try {
-            const response = await fetch(`${API_BASE_URL}/addresses/list`, {
+            const response = await fetch(`${API_BASE_URL}/addresses`, {
                 method: 'GET',
                 headers: getAuthHeaders()
             });
@@ -563,7 +563,7 @@ async function handleCheckout() {
             const quantity = parseInt(item.quantity, 10) || 1;
             const itemTotal = (discountedPrice * quantity).toFixed(2);
 
-            const response = await fetch(`${API_BASE_URL}/orders/create`, {
+            const response = await fetch(`${API_BASE_URL}/orders`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({

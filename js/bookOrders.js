@@ -193,7 +193,7 @@ function renderOrders(orders) {
     }
 
     activeOrders.forEach((order) => {
-        fetch(`${BASE_URL}/api/v1/books/show/${order.book_id}`, {
+        fetch(`${BASE_URL}/api/v1/books/${order.book_id}`, {
             headers: {
                 "Authorization": `Bearer ${localStorage.getItem("token")}`
             }
@@ -310,7 +310,7 @@ function cancelOrder(orderId, orderElement) {
     }
 
     if (confirm("Are you sure you want to cancel this order?")) {
-        fetch(`${BASE_URL}/api/v1/orders/update_status/${orderId}`, {
+        fetch(`${BASE_URL}/api/v1/orders/${orderId}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
