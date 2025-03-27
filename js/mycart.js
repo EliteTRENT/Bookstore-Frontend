@@ -11,6 +11,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
+    // Redirect to dashboard when clicking the logo
+    document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
+        window.location.href = "../pages/bookStoreDashboard.html";
+    });
+
     setupUIEventListeners();
     updateProfileUI();
     await loadCartItems(userId);
