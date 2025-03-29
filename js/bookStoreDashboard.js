@@ -208,6 +208,7 @@ function renderBooks(books) {
     );
   });
 
+  // Attach event listeners for Quick View buttons
   document.querySelectorAll(".bookstore-dash__quick-view").forEach(button => {
     button.addEventListener("click", e => {
       const bookCard = e.target.closest(".bookstore-dash__book-card");
@@ -215,6 +216,73 @@ function renderBooks(books) {
       window.location.href = `/pages/bookdetails.html?bookId=${bookId}`;
     });
   });
+
+  // Attach event listeners for Delete buttons (only for admins)
+  document.querySelectorAll(".bookstore-dash__delete-btn").forEach(button => {
+    button.addEventListener("click", e => {
+      const bookId = e.target.closest(".bookstore-dash__delete-btn").getAttribute("data-book-id");
+      deleteBook(bookId);
+    });
+  });
+}
+
+function deleteBook(bookId) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Please log in to delete a book.");
+    window.location.href = "../pages/login.html";
+    return;
+  }
+
+  if (confirm("Are you sure you want to delete this book?")) {
+    fetch(`${BASE_URL}/api/v1/books/delete/${bookId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        const contentType = response.headers.get("Content-Type");
+        if (!response.ok) {
+          if (contentType && contentType.includes("application/json")) {
+            return response.json().then((err) => {
+              throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+            });
+          } else {
+            throw new Error(`HTTP error! Status: ${response.status} (non-JSON response)`);
+          }
+        }
+        if (contentType && contentType.includes("application/json")) {
+          return response.json();
+        } else {
+          return { message: "Book marked as deleted" };
+        }
+      })
+      .then((data) => {
+        console.log("Toggle Delete Book Response:", data);
+        if (
+          data.message === "Book deleted successfully" ||
+          data.message === "Book restored successfully" ||
+          data.message === "Book marked as deleted" // Added this condition
+        ) {
+          alert("Book deleted successfully!");
+          fetchBooks(currentPage, sortSelect.value); // Refresh the book list
+        } else {
+          alert("Error deleting book: " + (data.error || "Unknown error"));
+        }
+      })
+      .catch((error) => {
+        console.error("Error deleting book:", error.message);
+        if (error.message.includes("401")) {
+          alert("Session expired. Please log in again.");
+          localStorage.clear();
+          window.location.href = "../pages/login.html";
+        } else {
+          alert("Failed to delete book: " + error.message);
+        }
+      });
+  }
 }
 
 // Add a Book Card to the UI
@@ -223,11 +291,20 @@ function addBookToUI(name, author, image, discounted_price, mrp, quantity, avera
   bookCard.className = "bookstore-dash__book-card";
   bookCard.setAttribute("data-book-id", bookId);
 
+  // Check if the user is an admin
+  const role = localStorage.getItem("role");
+  const isAdmin = role === "admin";
+
   bookCard.innerHTML = `
     <div class="bookstore-dash__book-image-wrapper">
       <img src="${image}" alt="${name}" class="bookstore-dash__book-image">
       <div class="bookstore-dash__quick-view">Quick View</div>
       ${quantity === 0 ? '<p class="bookstore-dash__book-out-of-stock">Out of Stock</p>' : ""}
+      ${
+        isAdmin
+          ? `<button class="bookstore-dash__delete-btn" data-book-id="${bookId}"><i class="fas fa-trash"></i> Delete</button>`
+          : ""
+      }
     </div>
     <div class="bookstore-dash__book-details">
       <h3 class="bookstore-dash__book-title">${name}</h3>
@@ -302,11 +379,15 @@ sortSelect.addEventListener("change", () => {
 });
 
 // Profile Dropdown Functionality
+// Profile Dropdown Functionality
 function updateProfileUI() {
   const profileIcon = document.querySelector("#profileDropdownTrigger");
-  if (!profileIcon) return;
+  if (!profileIcon) {
+    console.error("Profile icon not found");
+    return;
+  }
 
-  // Set the profile icon text (always show "Guest" or firstName, dropdown will handle the rest)
+  const role = localStorage.getItem("role");
   const userName = token && userId ? (localStorage.getItem("user_name") || "Guest") : "Guest";
   const firstName = userName.split(" ")[0];
   profileIcon.innerHTML = `<i class="fas fa-user"></i> ${firstName}`;
@@ -320,63 +401,78 @@ function updateProfileUI() {
   }
 
   // Set dropdown content based on login status
-  if (!token || !userId) {
+  if (token && userId) {
+    let profileContent = `
+      <div class="bookstore-dash__profile-item bookstore-dash__profile"><i class="fas fa-user"></i> Profile</div>
+      <div class="bookstore-dash__profile-item bookstore-dash__orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
+      <div class="bookstore-dash__profile-item bookstore-dash__wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
+    `;
+    if (role === "admin") {
+      profileContent += `
+        <div class="bookstore-dash__profile-item bookstore-dash__profile-create-user"><i class="fas fa-user-plus"></i> Create User</div>
+      `;
+    }
+    profileContent += `
+      <div class="bookstore-dash__profile-item bookstore-dash__logout"><i class="fas fa-sign-out-alt"></i> Logout</div>
+    `;
+    profileDropdown.innerHTML = profileContent;
+
+    // Add event listeners for logged-in user
+    profileDropdown.querySelector(".bookstore-dash__profile").addEventListener("click", () => {
+      window.location.href = "../pages/profile.html";
+    });
+    profileDropdown.querySelector(".bookstore-dash__orders").addEventListener("click", () => {
+      window.location.href = "../pages/bookOrders.html";
+    });
+    profileDropdown.querySelector(".bookstore-dash__wishlist").addEventListener("click", () => {
+      window.location.href = "../pages/bookWishlist.html";
+    });
+    profileDropdown.querySelector(".bookstore-dash__logout").addEventListener("click", () => {
+      localStorage.clear();
+      updateProfileUI();
+      window.location.href = "../pages/login.html";
+    });
+    if (role === "admin") {
+      profileDropdown.querySelector(".bookstore-dash__profile-create-user").addEventListener("click", () => {
+        window.location.href = "../pages/admin_create.html";
+      });
+    }
+  } else {
     profileDropdown.innerHTML = `
       <div class="bookstore-dash__profile-item">Hello, Guest</div>
       <div class="bookstore-dash__profile-item bookstore-dash__profile-login"><i class="fas fa-sign-in-alt"></i> Login</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
+      <div class="bookstore-dash__profile-item bookstore-dash__wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
+      <div class="bookstore-dash__profile-item bookstore-dash__orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
     `;
-  } else {
-    profileDropdown.innerHTML = `
-      <div class="bookstore-dash__profile-item">Hello, ${userName}</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-profile"><i class="fas fa-user"></i> Profile</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-logout">Logout</div>
-    `;
+
+    // Add event listeners for guest user
+    profileDropdown.querySelector(".bookstore-dash__profile-login").addEventListener("click", () => {
+      window.location.href = "../pages/login.html";
+    });
+    profileDropdown.querySelector(".bookstore-dash__wishlist").addEventListener("click", () => {
+      window.location.href = "../pages/bookWishlist.html";
+    });
+    profileDropdown.querySelector(".bookstore-dash__orders").addEventListener("click", () => {
+      window.location.href = "../pages/bookOrders.html";
+    });
   }
 
+  // Remove existing click listener to prevent stacking
+  const newProfileIcon = profileIcon.cloneNode(true);
+  profileIcon.parentNode.replaceChild(newProfileIcon, profileIcon);
+
   // Toggle dropdown on click
-  profileIcon.addEventListener("click", e => {
+  newProfileIcon.addEventListener("click", e => {
     e.preventDefault();
     profileDropdown.classList.toggle("active");
   });
 
   // Close dropdown when clicking outside
   document.addEventListener("click", e => {
-    if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
+    if (!newProfileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
       profileDropdown.classList.remove("active");
     }
   });
-
-  // Add event listeners for dropdown items
-  if (!token || !userId) {
-    profileDropdown.querySelector(".bookstore-dash__profile-login").addEventListener("click", () => {
-      window.location.href = "../pages/login.html";
-    });
-    profileDropdown.querySelector(".bookstore-dash__profile-wishlist").addEventListener("click", () => {
-      window.location.href = "../pages/bookWishlist.html";
-    });
-    profileDropdown.querySelector(".bookstore-dash__profile-orders").addEventListener("click", () => {
-      window.location.href = "../pages/bookOrders.html";
-    });
-  } else {
-    profileDropdown.querySelector(".bookstore-dash__profile-profile").addEventListener("click", () => {
-      window.location.href = "../pages/profile.html";
-    });
-    profileDropdown.querySelector(".bookstore-dash__profile-orders").addEventListener("click", () => {
-      window.location.href = "../pages/bookOrders.html";
-    });
-    profileDropdown.querySelector(".bookstore-dash__profile-wishlist").addEventListener("click", () => {
-      window.location.href = "../pages/bookWishlist.html";
-    });
-    profileDropdown.querySelector(".bookstore-dash__profile-logout").addEventListener("click", () => {
-      localStorage.clear();
-      updateProfileUI();
-      window.location.href = "../pages/login.html";
-    });
-  }
 }
 
 // Cart Icon Click Functionality

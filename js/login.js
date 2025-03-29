@@ -71,6 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("token", result.token);
         localStorage.setItem("email", result.email);
         localStorage.setItem("mobile_number", result.mobile_number);
+        localStorage.setItem("role", result.role);
         console.log("Stored token:", result.token);
         showToast(result.message || "Login successful!", "success");
         setTimeout(() => {
@@ -183,6 +184,7 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("token", result.token);
         localStorage.setItem("email", result.email);
         localStorage.setItem("mobile_number", result.mobile_number);
+        localStorage.setItem("role", result.role);
         console.log("Stored token:", localStorage.getItem("token"));
         showToast(result.message || "Login successful!", "success");
         loginForm.reset();

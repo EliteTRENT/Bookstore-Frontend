@@ -36,12 +36,12 @@ function fetchBookDetails(bookId) {
       return response.json();
     })
     .then((data) => {
-      console.log("Book API Response:", data);
       if (!data.book || !data.book.id) {
         throw new Error(data.errors || "Failed to retrieve book details");
       }
       renderBookDetails(data.book);
-      checkWishlistStatus(bookId); // Check wishlist status after loading book details
+      checkWishlistStatus(bookId);
+      setupEditBookForm(data.book); // Setup the edit form
     })
     .catch((error) => {
       console.error("Error fetching book details:", error.message);
@@ -52,6 +52,114 @@ function fetchBookDetails(bookId) {
       discountedPrice.textContent = "0.00";
       mrp.textContent = "0.00";
     });
+}
+
+function setupEditBookForm(book) {
+  const role = localStorage.getItem("role");
+  const isAdmin = role === "admin";
+  const editBookBtn = document.getElementById("editBookBtn");
+  const editBookForm = document.getElementById("editBookForm");
+  const editBookFormElement = document.getElementById("editBookFormElement");
+  const cancelEditBtn = document.getElementById("cancelEditBtn");
+
+  if (isAdmin && editBookBtn) {
+    editBookBtn.style.display = "inline-block";
+    editBookBtn.addEventListener("click", () => {
+      // Populate the form with current book details
+      document.getElementById("editName").value = book.name || "";
+      document.getElementById("editAuthor").value = book.author || "";
+      document.getElementById("editMrp").value = book.mrp || 0;
+      document.getElementById("editDiscountedPrice").value = book.discounted_price || 0;
+      document.getElementById("editQuantity").value = book.quantity || 0;
+      document.getElementById("editBookDetails").value = book.book_details || "";
+      document.getElementById("editGenre").value = book.genre || "";
+      document.getElementById("editBookImage").value = book.book_image || "";
+
+      editBookForm.style.display = "block";
+      editBookBtn.style.display = "none";
+    });
+
+    cancelEditBtn.addEventListener("click", () => {
+      editBookForm.style.display = "none";
+      editBookBtn.style.display = "inline-block";
+    });
+
+    editBookFormElement.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const formData = new FormData(editBookFormElement);
+      const bookData = {
+        book: {
+          name: formData.get("name"),
+          author: formData.get("author"),
+          mrp: parseFloat(formData.get("mrp")),
+          discounted_price: parseFloat(formData.get("discounted_price")),
+          quantity: parseInt(formData.get("quantity")),
+          book_details: formData.get("book_details"),
+          genre: formData.get("genre"),
+          book_image: formData.get("book_image"),
+        },
+      };
+
+      fetch(`${BASE_URL}/api/v1/books/${bookId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(bookData),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then((err) => {
+              throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+            });
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Update Book Response:", data);
+          // Check for different possible response structures
+          let updatedBook = null;
+          let isSuccess = false;
+
+          if (data.success) {
+            isSuccess = true;
+            updatedBook = data.book || data.data || null;
+          } else if (data.message && data.message.toLowerCase().includes("success")) {
+            isSuccess = true;
+            updatedBook = data.book || data.data || null;
+          } else if (data.id) {
+            // If the response is just the book object
+            isSuccess = true;
+            updatedBook = data;
+          }
+
+          if (isSuccess && updatedBook) {
+            alert("Book updated successfully!");
+            renderBookDetails(updatedBook);
+            editBookForm.style.display = "none";
+            editBookBtn.style.display = "inline-block";
+          } else {
+            const errorMessage = Array.isArray(data.errors)
+              ? data.errors.join(", ")
+              : data.error || "Unknown error occurred";
+            alert(`Error: ${errorMessage}`);
+          }
+        })
+        .catch((error) => {
+          console.error("Error updating book:", error.message);
+          if (error.message.includes("401")) {
+            alert("Session expired. Please log in again.");
+            localStorage.removeItem("user_id");
+            localStorage.removeItem("user_name");
+            localStorage.removeItem("token");
+            window.location.href = "../pages/login.html";
+          } else {
+            alert("Failed to update book: " + error.message);
+          }
+        });
+    });
+  }
 }
 
 // Render Book Details
@@ -105,7 +213,6 @@ function fetchReviews(bookId) {
       return response.json();
     })
     .then((data) => {
-      console.log("Reviews API Response:", data);
       if (data.data && data.data.reviews && Array.isArray(data.data.reviews)) {
         renderReviews(data.data.reviews);
         reviewCount.textContent = `(${data.data.total_reviews || 0})`;
@@ -211,7 +318,6 @@ function deleteReview(reviewId) {
         return response.json();
       })
       .then((data) => {
-        console.log("Delete Review Response:", data);
         if (data.message) {
           alert("Review deleted successfully!");
           fetchReviews(bookId);
@@ -235,7 +341,6 @@ function checkWishlistStatus(bookId) {
   const userId = localStorage.getItem("user_id");
 
   if (!token || !userId) {
-    console.log("User not logged in. Wishlist button remains inactive.");
     updateWishlistButton(false); // Default to not in wishlist
     return;
   }
@@ -254,7 +359,6 @@ function checkWishlistStatus(bookId) {
       return response.json();
     })
     .then((data) => {
-      console.log("Wishlist Check API Response:", data);
       if (data.success && Array.isArray(data.message)) {
         const wishlistItem = data.message.find(
           (item) => item.book && item.book.id === parseInt(bookId) && !item.is_deleted
@@ -343,7 +447,6 @@ function addToWishlist(bookId) {
       return response.json();
     })
     .then((data) => {
-      console.log("Add to Wishlist Response:", data);
       if (data.success && data.message === "Book added to wishlist!") {
         alert("Book added to wishlist!");
         wishlistBtn.querySelector(".wishlist-icon").classList.add("filled");
@@ -404,7 +507,6 @@ function removeFromWishlist(wishlistId) {
       return response.json();
     })
     .then((data) => {
-      console.log("Remove from Wishlist Response:", data);
       if (data.success && data.message === "Book removed from wishlist!") {
         alert("Book removed from wishlist!");
         wishlistBtn.querySelector(".wishlist-icon").classList.remove("filled");
@@ -433,18 +535,12 @@ async function fetchCartCount() {
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('token');
 
-  console.log("Fetching cart count...");
-  console.log("User ID:", userId);
-  console.log("Token:", token);
-
   if (!userId || !token) {
-    console.log("User not logged in. Setting cart count to 0.");
     updateCartCount(0);
     return;
   }
 
   try {
-    console.log(`Making request to ${BASE_URL}/api/v1/carts/${userId}`);
     const response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
       method: 'GET',
       headers: {
@@ -453,10 +549,8 @@ async function fetchCartCount() {
       }
     });
 
-    console.log("Response status:", response.status);
     if (!response.ok) {
       if (response.status === 401) {
-        console.log("Unauthorized (401). Redirecting to login.");
         alert("Session expired. Please log in again.");
         localStorage.removeItem('token');
         localStorage.removeItem('user_id');
@@ -470,15 +564,12 @@ async function fetchCartCount() {
     }
 
     const data = await response.json();
-    console.log("Cart API Response:", data);
 
     if (!data.success) {
       throw new Error(data.error || 'Failed to fetch cart items');
     }
 
     const cartItems = data.cart || [];
-    console.log("Cart Items:", cartItems);
-    console.log("Cart Count:", cartItems.length);
     updateCartCount(cartItems.length);
   } catch (error) {
     console.error('Error fetching cart count:', error.message);
@@ -490,7 +581,6 @@ async function fetchCartCount() {
 function updateCartCount(count) {
   const cartIcon = document.getElementById('cartIcon');
   if (cartIcon) {
-    console.log(`Updating cart count to ${count}`);
     cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${count})`;
   } else {
     console.warn("Cart icon element not found in the DOM.");
@@ -632,7 +722,6 @@ function setupEventListeners() {
                   return response.json();
               })
               .then((data) => {
-                  console.log("Add to Cart Response:", data);
                   if (data.message) {
                       alert("Book added to cart successfully!");
                       // Hide the "ADD TO BAG" button and show the quantity selector
@@ -800,7 +889,6 @@ function setupEventListeners() {
           return response.json();
         })
         .then((data) => {
-          console.log("Review Submission Response:", data);
           if (data.message && data.review) {
             const newReview = {
               user_name: data.review.user.name,
