@@ -85,6 +85,7 @@ async function fetchBookDetails(bookId) {
       throw new Error(data.errors || "Failed to retrieve book details");
     }
     renderBookDetails(data.book);
+    setupEditBookForm(data.book);
     checkWishlistStatus(bookId);
   } catch (error) {
     bookTitle.textContent = "Error Loading Book";
@@ -106,8 +107,8 @@ function setupEditBookForm(book) {
 
   if (isAdmin && editBookBtn) {
     editBookBtn.style.display = "inline-block";
+
     editBookBtn.addEventListener("click", () => {
-      // Populate the form with current book details
       document.getElementById("editName").value = book.name || "";
       document.getElementById("editAuthor").value = book.author || "";
       document.getElementById("editMrp").value = book.mrp || 0;
@@ -159,8 +160,6 @@ function setupEditBookForm(book) {
           return response.json();
         })
         .then((data) => {
-          console.log("Update Book Response:", data);
-          // Check for different possible response structures
           let updatedBook = null;
           let isSuccess = false;
 
@@ -171,7 +170,6 @@ function setupEditBookForm(book) {
             isSuccess = true;
             updatedBook = data.book || data.data || null;
           } else if (data.id) {
-            // If the response is just the book object
             isSuccess = true;
             updatedBook = data;
           }
@@ -189,7 +187,6 @@ function setupEditBookForm(book) {
           }
         })
         .catch((error) => {
-          console.error("Error updating book:", error.message);
           if (error.message.includes("401")) {
             alert("Session expired. Please log in again.");
             localStorage.removeItem("user_id");
