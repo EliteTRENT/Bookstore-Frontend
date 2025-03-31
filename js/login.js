@@ -69,17 +69,20 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("user_id", result.user_id);
         localStorage.setItem("user_name", result.user_name);
         localStorage.setItem("token", result.token);
+        localStorage.setItem("refresh_token", result.refresh_token); // Add refresh token
         localStorage.setItem("email", result.email);
         localStorage.setItem("mobile_number", result.mobile_number);
+        localStorage.setItem("role", result.role || "user"); // Default to "user" if role isn’t provided
         console.log("Stored token:", result.token);
+        console.log("Stored refresh_token:", result.refresh_token);
         showToast(result.message || "Login successful!", "success");
         setTimeout(() => {
           window.location.href = "bookStoreDashboard.html";
         }, 1000); // Delay redirect to show toast
       })
       .catch(error => {
-        console.error("Google Sign-In error:", error);
-        showToast(error.message, "error");
+        console.error("Google Sign-In error:", error.message);
+        showToast(`Google login failed: ${error.message}`, "error");
       });
   };
 
@@ -176,7 +179,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const result = await response.json();
 
       if (response.ok) {
-        // Success case
         console.log("Normal login response:", result);
         localStorage.setItem("user_id", result.user_id);
         localStorage.setItem("user_name", result.user_name);
@@ -184,6 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("refresh_token", result.refresh_token);
         localStorage.setItem("email", result.email);
         localStorage.setItem("mobile_number", result.mobile_number);
+        localStorage.setItem("role", result.role);
         console.log("Stored token:", localStorage.getItem("token"));
         showToast(result.message || "Login successful!", "success");
         loginForm.reset();
@@ -191,7 +194,6 @@ document.addEventListener("DOMContentLoaded", function () {
           window.location.href = "bookStoreDashboard.html";
         }, 1000); // Delay redirect to show toast
       } else {
-        // Error case - backend-specific messages
         console.error("Normal login error response:", result);
         if (result.errors === "Email not registered.") {
           showToast("Email not registered", "error");

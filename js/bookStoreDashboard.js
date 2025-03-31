@@ -16,8 +16,8 @@ let debounceTimeout = null;
 let abortController = null;
 
 // Get token and user ID from localStorage
-let token = localStorage.getItem("token"); 
-const refreshToken = localStorage.getItem("refresh_token"); 
+let token = localStorage.getItem("token");
+const refreshToken = localStorage.getItem("refresh_token");
 const userId = localStorage.getItem("user_id");
 
 // Headers with token (updated dynamically)
@@ -42,10 +42,7 @@ async function refreshAccessToken() {
     });
 
     const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.errors || `Refresh failed with status: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(data.errors || `Refresh failed with status: ${response.status}`);
 
     token = data.token;
     localStorage.setItem("token", token);
@@ -67,34 +64,18 @@ async function fetchCartCount() {
   }
 
   try {
-    let response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
-      method: "GET",
-      headers: headers
-    });
-
+    let response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, { method: "GET", headers });
     if (response.status === 401) {
       const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
-          method: "GET",
-          headers: headers
-        });
-      } else {
-        return;
-      }
+      if (!refreshed) return;
+      response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, { method: "GET", headers });
     }
 
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: Failed to fetch cart items`);
-    }
-
+    if (!response.ok) throw new Error(`Error ${response.status}: Failed to fetch cart items`);
     const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.error || "Failed to fetch cart items");
-    }
+    if (!data.success) throw new Error(data.error || "Failed to fetch cart items");
 
-    const cartItems = data.cart || [];
-    updateCartCount(cartItems.length);
+    updateCartCount(data.cart?.length || 0);
   } catch (error) {
     updateCartCount(0);
   }
@@ -118,23 +99,11 @@ async function fetchBooks(page = 1, sort = "relevance") {
   if (sort && sort !== "relevance") url += `&sort_by=${encodeURIComponent(sort)}`;
 
   try {
-    let response = await fetch(url, {
-      method: "GET",
-      headers: headers,
-      signal: abortController.signal
-    });
-
+    let response = await fetch(url, { method: "GET", headers, signal: abortController.signal });
     if (response.status === 401 && token) {
       const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        response = await fetch(url, {
-          method: "GET",
-          headers: headers,
-          signal: abortController.signal
-        });
-      } else {
-        return;
-      }
+      if (!refreshed) return;
+      response = await fetch(url, { method: "GET", headers, signal: abortController.signal });
     }
 
     if (!response.ok) {
@@ -150,9 +119,7 @@ async function fetchBooks(page = 1, sort = "relevance") {
     renderPagination(data.pagination);
     totalItems.textContent = data.pagination.total_count;
   } catch (error) {
-    if (error.name === "AbortError") {
-      return;
-    }
+    if (error.name === "AbortError") return;
     bookGrid.innerHTML = `<p class="error-message">Error: ${error.message}</p>`;
   }
 }
@@ -170,21 +137,18 @@ async function searchBooks(query) {
   try {
     let response = await fetch(`${BASE_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
       method: "GET",
-      headers: headers,
+      headers,
       signal: abortController.signal
     });
 
     if (response.status === 401 && token) {
       const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        response = await fetch(`${BASE_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
-          method: "GET",
-          headers: headers,
-          signal: abortController.signal
-        });
-      } else {
-        return;
-      }
+      if (!refreshed) return;
+      response = await fetch(`${BASE_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
+        method: "GET",
+        headers,
+        signal: abortController.signal
+      });
     }
 
     if (!response.ok) {
@@ -200,9 +164,7 @@ async function searchBooks(query) {
     renderPagination({ current_page: 1, total_pages: 1 });
     totalItems.textContent = data.suggestions.length;
   } catch (error) {
-    if (error.name === "AbortError") {
-      return;
-    }
+    if (error.name === "AbortError") return;
     bookGrid.innerHTML = `<p class="error-message">Error: ${error.message}</p>`;
   }
 }
@@ -236,13 +198,65 @@ function renderBooks(books) {
     );
   });
 
-  document.querySelectorAll(".bookstore-dash__quick-view").forEach(button => {
-    button.addEventListener("click", e => {
-      const bookCard = e.target.closest(".bookstore-dash__book-card");
+  // Use event delegation instead of attaching listeners to each button
+  bookGrid.addEventListener("click", e => {
+    const quickViewBtn = e.target.closest(".bookstore-dash__quick-view");
+    const deleteBtn = e.target.closest(".bookstore-dash__delete-btn");
+
+    if (quickViewBtn) {
+      const bookCard = quickViewBtn.closest(".bookstore-dash__book-card");
       const bookId = bookCard.getAttribute("data-book-id");
       window.location.href = `/pages/bookdetails.html?bookId=${bookId}`;
-    });
+    } else if (deleteBtn) {
+      const bookId = deleteBtn.getAttribute("data-book-id");
+      deleteBook(bookId);
+    }
   });
+}
+
+// Delete Book
+async function deleteBook(bookId) {
+  if (!token) {
+    alert("Please log in to delete a book.");
+    window.location.href = "../pages/login.html";
+    return;
+  }
+
+  if (!confirm("Are you sure you want to delete this book?")) return;
+
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/books/delete/${bookId}`, {
+      method: "PATCH",
+      headers
+    });
+
+    if (response.status === 401) {
+      const refreshed = await refreshAccessToken();
+      if (!refreshed) return;
+      const retryResponse = await fetch(`${BASE_URL}/api/v1/books/delete/${bookId}`, { method: "PATCH", headers });
+      if (!retryResponse.ok) throw new Error(`HTTP error! Status: ${retryResponse.status}`);
+      const retryData = await retryResponse.json();
+      handleDeleteSuccess(retryData);
+    } else if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.error || `HTTP error! Status: ${response.status}`);
+    } else {
+      const data = await response.json();
+      handleDeleteSuccess(data);
+    }
+  } catch (error) {
+    console.error("Error deleting book:", error.message);
+    alert(`Failed to delete book: ${error.message}`);
+  }
+}
+
+function handleDeleteSuccess(data) {
+  if (data.message === "Book deleted successfully" || data.message === "Book restored successfully" || data.message === "Book marked as deleted") {
+    alert("Book deleted successfully!");
+    fetchBooks(currentPage, sortSelect.value);
+  } else {
+    alert("Error deleting book: " + (data.error || "Unknown error"));
+  }
 }
 
 // Add a Book Card to the UI
@@ -251,11 +265,15 @@ function addBookToUI(name, author, image, discounted_price, mrp, quantity, avera
   bookCard.className = "bookstore-dash__book-card";
   bookCard.setAttribute("data-book-id", bookId);
 
+  const role = localStorage.getItem("role");
+  const isAdmin = role === "admin";
+
   bookCard.innerHTML = `
     <div class="bookstore-dash__book-image-wrapper">
       <img src="${image}" alt="${name}" class="bookstore-dash__book-image">
       <div class="bookstore-dash__quick-view">Quick View</div>
       ${quantity === 0 ? '<p class="bookstore-dash__book-out-of-stock">Out of Stock</p>' : ""}
+      ${isAdmin ? `<button class="bookstore-dash__delete-btn" data-book-id="${bookId}"><i class="fas fa-trash"></i> Delete</button>` : ""}
     </div>
     <div class="bookstore-dash__book-details">
       <h3 class="bookstore-dash__book-title">${name}</h3>
@@ -310,12 +328,8 @@ function renderPagination(pagination) {
   prevPageBtn.disabled = currentPage === 1;
   nextPageBtn.disabled = currentPage === totalPages;
 
-  prevPageBtn.onclick = () => {
-    if (currentPage > 1) fetchBooks(currentPage - 1, sortSelect.value);
-  };
-  nextPageBtn.onclick = () => {
-    if (currentPage < totalPages) fetchBooks(currentPage + 1, sortSelect.value);
-  };
+  prevPageBtn.onclick = () => currentPage > 1 && fetchBooks(currentPage - 1, sortSelect.value);
+  nextPageBtn.onclick = () => currentPage < totalPages && fetchBooks(currentPage + 1, sortSelect.value);
 }
 
 // Event Listeners
@@ -325,15 +339,14 @@ searchInput.addEventListener("input", e => {
   debounceTimeout = setTimeout(() => searchBooks(query), 300);
 });
 
-sortSelect.addEventListener("change", () => {
-  fetchBooks(1, sortSelect.value);
-});
+sortSelect.addEventListener("change", () => fetchBooks(1, sortSelect.value));
 
 // Profile Dropdown Functionality
 function updateProfileUI() {
   const profileIcon = document.querySelector("#profileDropdownTrigger");
-  if (!profileIcon) return;
+  if (!profileIcon) return console.error("Profile icon not found");
 
+  const role = localStorage.getItem("role");
   const userName = token && userId ? (localStorage.getItem("user_name") || "Guest") : "Guest";
   const firstName = userName.split(" ")[0];
   profileIcon.innerHTML = `<i class="fas fa-user"></i> ${firstName}`;
@@ -345,59 +358,50 @@ function updateProfileUI() {
     document.querySelector(".bookstore-dash__header").appendChild(profileDropdown);
   }
 
-  if (!token || !userId) {
-    profileDropdown.innerHTML = `
-      <div class="bookstore-dash__profile-item">Hello, Guest</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-login"><i class="fas fa-sign-in-alt"></i> Login</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
-    `;
-  } else {
-    profileDropdown.innerHTML = `
-      <div class="bookstore-dash__profile-item">Hello, ${userName}</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-profile"><i class="fas fa-user"></i> Profile</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
-      <div class="bookstore-dash__profile-item bookstore-dash__profile-logout">Logout</div>
-    `;
-  }
+  profileDropdown.innerHTML = token && userId
+    ? `
+        <div class="bookstore-dash__profile-item bookstore-dash__profile"><i class="fas fa-user"></i> Profile</div>
+        <div class="bookstore-dash__profile-item bookstore-dash__orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
+        <div class="bookstore-dash__profile-item bookstore-dash__wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
+        ${role === "admin" ? '<div class="bookstore-dash__profile-item bookstore-dash__profile-create-user"><i class="fas fa-user-plus"></i> Create User</div>' : ""}
+        <div class="bookstore-dash__profile-item bookstore-dash__logout"><i class="fas fa-sign-out-alt"></i> Logout</div>
+      `
+    : `
+        <div class="bookstore-dash__profile-item">Hello, Guest</div>
+        <div class="bookstore-dash__profile-item bookstore-dash__profile-login"><i class="fas fa-sign-in-alt"></i> Login</div>
+        <div class="bookstore-dash__profile-item bookstore-dash__wishlist"><i class="fas fa-heart"></i> My Wishlist</div>
+        <div class="bookstore-dash__profile-item bookstore-dash__orders"><i class="fas fa-shopping-bag"></i> My Orders</div>
+      `;
 
-  profileIcon.addEventListener("click", e => {
+  // Toggle dropdown
+  profileIcon.onclick = e => {
     e.preventDefault();
     profileDropdown.classList.toggle("active");
-  });
+  };
 
-  document.addEventListener("click", e => {
+  document.onclick = e => {
     if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
       profileDropdown.classList.remove("active");
     }
-  });
+  };
 
-  if (!token || !userId) {
-    profileDropdown.querySelector(".bookstore-dash__profile-login").addEventListener("click", () => {
-      window.location.href = "../pages/login.html";
-    });
-    profileDropdown.querySelector(".bookstore-dash__profile-wishlist").addEventListener("click", () => {
-      window.location.href = "../pages/bookWishlist.html";
-    });
-    profileDropdown.querySelector(".bookstore-dash__profile-orders").addEventListener("click", () => {
-      window.location.href = "../pages/bookOrders.html";
-    });
-  } else {
-    profileDropdown.querySelector(".bookstore-dash__profile-profile").addEventListener("click", () => {
-      window.location.href = "../pages/profile.html";
-    });
-    profileDropdown.querySelector(".bookstore-dash__profile-orders").addEventListener("click", () => {
-      window.location.href = "../pages/bookOrders.html";
-    });
-    profileDropdown.querySelector(".bookstore-dash__profile-wishlist").addEventListener("click", () => {
-      window.location.href = "../pages/bookWishlist.html";
-    });
-    profileDropdown.querySelector(".bookstore-dash__profile-logout").addEventListener("click", () => {
+  // Attach event listeners
+  if (token && userId) {
+    profileDropdown.querySelector(".bookstore-dash__profile").onclick = () => window.location.href = "../pages/profile.html";
+    profileDropdown.querySelector(".bookstore-dash__orders").onclick = () => window.location.href = "../pages/bookOrders.html";
+    profileDropdown.querySelector(".bookstore-dash__wishlist").onclick = () => window.location.href = "../pages/bookWishlist.html";
+    profileDropdown.querySelector(".bookstore-dash__logout").onclick = () => {
       localStorage.clear();
       updateProfileUI();
       window.location.href = "../pages/login.html";
-    });
+    };
+    if (role === "admin") {
+      profileDropdown.querySelector(".bookstore-dash__profile-create-user").onclick = () => window.location.href = "../pages/admin_create.html";
+    }
+  } else {
+    profileDropdown.querySelector(".bookstore-dash__profile-login").onclick = () => window.location.href = "../pages/login.html";
+    profileDropdown.querySelector(".bookstore-dash__wishlist").onclick = () => window.location.href = "../pages/bookWishlist.html";
+    profileDropdown.querySelector(".bookstore-dash__orders").onclick = () => window.location.href = "../pages/bookOrders.html";
   }
 }
 
@@ -405,13 +409,7 @@ function updateProfileUI() {
 function setupCartIconListener() {
   const cartIcon = document.getElementById("cartIcon");
   if (cartIcon) {
-    cartIcon.addEventListener("click", () => {
-      if (!token || !userId) {
-        window.location.href = "../pages/mycart.html";
-        return;
-      }
-      window.location.href = "../pages/mycart.html";
-    });
+    cartIcon.onclick = () => window.location.href = "../pages/mycart.html";
   }
 }
 

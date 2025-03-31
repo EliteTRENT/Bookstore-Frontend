@@ -409,6 +409,39 @@ body {
     color: white;
 }
 
+/* Delete Button */
+.bookstore-dash__delete-btn {
+    position: absolute;
+    top: 0.9375rem;
+    left: 0.9375rem; /* Opposite side of Quick View */
+    background-color: rgba(255, 0, 0, 0.7);
+    color: white;
+    padding: 0.3125rem 0.625rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.3125rem;
+}
+
+.bookstore-dash__delete-btn i {
+    font-size: 0.875rem;
+}
+
+.bookstore-dash__book-card:hover .bookstore-dash__delete-btn {
+    opacity: 1;
+}
+
+.bookstore-dash__delete-btn:hover {
+    background-color: rgba(255, 0, 0, 0.9);
+}
+
 /* Media Queries for Responsiveness */
 @media (max-width: 1024px) {
     .bookstore-dash__grid {

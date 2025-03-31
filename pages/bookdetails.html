@@ -47,7 +47,51 @@
         </div>
 
         <div class="book-info">
-            <h1 class="book-title" id="bookTitle">Loading...</h1>
+            <div class="book-header">
+                <h1 class="book-title" id="bookTitle">Loading...</h1>
+                <button class="edit-book-btn" id="editBookBtn" style="display: none;"><i class="fas fa-edit"></i> Edit Book</button>
+            </div>
+            <div class="edit-book-form" id="editBookForm" style="display: none;">
+                <h3>Edit Book Details</h3>
+                <form id="editBookFormElement">
+                    <div class="form-group">
+                        <label for="editName">Name:</label>
+                        <input type="text" id="editName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editAuthor">Author:</label>
+                        <input type="text" id="editAuthor" name="author" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editMrp">MRP (Rs.):</label>
+                        <input type="number" id="editMrp" name="mrp" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDiscountedPrice">Discounted Price (Rs.):</label>
+                        <input type="number" id="editDiscountedPrice" name="discounted_price" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editQuantity">Quantity:</label>
+                        <input type="number" id="editQuantity" name="quantity" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBookDetails">Book Details:</label>
+                        <textarea id="editBookDetails" name="book_details"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editGenre">Genre:</label>
+                        <input type="text" id="editGenre" name="genre">
+                    </div>
+                    <div class="form-group">
+                        <label for="editBookImage">Book Image URL:</label>
+                        <input type="text" id="editBookImage" name="book_image">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="submit-edit-btn">Save Changes</button>
+                        <button type="button" class="cancel-edit-btn" id="cancelEditBtn">Cancel</button>
+                    </div>
+                </form>
+            </div>
             <div class="book-author" id="bookAuthor">by Author</div>
             
             <div class="rating">
@@ -107,4 +151,5 @@
     </footer>
 
     <script src="../js/bookdetails.js"></script>
+</body>
 </html>

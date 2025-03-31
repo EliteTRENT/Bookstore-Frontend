@@ -96,6 +96,115 @@ async function fetchBookDetails(bookId) {
   }
 }
 
+function setupEditBookForm(book) {
+  const role = localStorage.getItem("role");
+  const isAdmin = role === "admin";
+  const editBookBtn = document.getElementById("editBookBtn");
+  const editBookForm = document.getElementById("editBookForm");
+  const editBookFormElement = document.getElementById("editBookFormElement");
+  const cancelEditBtn = document.getElementById("cancelEditBtn");
+
+  if (isAdmin && editBookBtn) {
+    editBookBtn.style.display = "inline-block";
+    editBookBtn.addEventListener("click", () => {
+      // Populate the form with current book details
+      document.getElementById("editName").value = book.name || "";
+      document.getElementById("editAuthor").value = book.author || "";
+      document.getElementById("editMrp").value = book.mrp || 0;
+      document.getElementById("editDiscountedPrice").value = book.discounted_price || 0;
+      document.getElementById("editQuantity").value = book.quantity || 0;
+      document.getElementById("editBookDetails").value = book.book_details || "";
+      document.getElementById("editGenre").value = book.genre || "";
+      document.getElementById("editBookImage").value = book.book_image || "";
+
+      editBookForm.style.display = "block";
+      editBookBtn.style.display = "none";
+    });
+
+    cancelEditBtn.addEventListener("click", () => {
+      editBookForm.style.display = "none";
+      editBookBtn.style.display = "inline-block";
+    });
+
+    editBookFormElement.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const formData = new FormData(editBookFormElement);
+      const bookData = {
+        book: {
+          name: formData.get("name"),
+          author: formData.get("author"),
+          mrp: parseFloat(formData.get("mrp")),
+          discounted_price: parseFloat(formData.get("discounted_price")),
+          quantity: parseInt(formData.get("quantity")),
+          book_details: formData.get("book_details"),
+          genre: formData.get("genre"),
+          book_image: formData.get("book_image"),
+        },
+      };
+
+      fetch(`${BASE_URL}/api/v1/books/${bookId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(bookData),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then((err) => {
+              throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+            });
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Update Book Response:", data);
+          // Check for different possible response structures
+          let updatedBook = null;
+          let isSuccess = false;
+
+          if (data.success) {
+            isSuccess = true;
+            updatedBook = data.book || data.data || null;
+          } else if (data.message && data.message.toLowerCase().includes("success")) {
+            isSuccess = true;
+            updatedBook = data.book || data.data || null;
+          } else if (data.id) {
+            // If the response is just the book object
+            isSuccess = true;
+            updatedBook = data;
+          }
+
+          if (isSuccess && updatedBook) {
+            alert("Book updated successfully!");
+            renderBookDetails(updatedBook);
+            editBookForm.style.display = "none";
+            editBookBtn.style.display = "inline-block";
+          } else {
+            const errorMessage = Array.isArray(data.errors)
+              ? data.errors.join(", ")
+              : data.error || "Unknown error occurred";
+            alert(`Error: ${errorMessage}`);
+          }
+        })
+        .catch((error) => {
+          console.error("Error updating book:", error.message);
+          if (error.message.includes("401")) {
+            alert("Session expired. Please log in again.");
+            localStorage.removeItem("user_id");
+            localStorage.removeItem("user_name");
+            localStorage.removeItem("token");
+            window.location.href = "../pages/login.html";
+          } else {
+            alert("Failed to update book: " + error.message);
+          }
+        });
+    });
+  }
+}
+
+// Render Book Details
 function renderBookDetails(book) {
   bookImage.src =
     book.book_image ||
@@ -472,6 +581,7 @@ async function fetchCartCount() {
     }
 
     const data = await response.json();
+
     if (!data.success) {
       throw new Error(data.error || "Failed to fetch cart items");
     }
