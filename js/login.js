@@ -181,6 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("user_id", result.user_id);
         localStorage.setItem("user_name", result.user_name);
         localStorage.setItem("token", result.token);
+        localStorage.setItem("refresh_token", result.refresh_token);
         localStorage.setItem("email", result.email);
         localStorage.setItem("mobile_number", result.mobile_number);
         console.log("Stored token:", localStorage.getItem("token"));

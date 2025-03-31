@@ -10,9 +10,45 @@ const loginBtn = document.getElementById("loginBtn");
 const profileIcon = document.getElementById("profileDropdownTrigger");
 const cartIcon = document.getElementById("cartIcon");
 
+// Token Management
+let token = localStorage.getItem("token");
+const refreshToken = localStorage.getItem("refresh_token");
+
+async function refreshAccessToken() {
+    if (!refreshToken) {
+        localStorage.clear();
+        setupProfileDropdown();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+
+    try {
+        const response = await fetch(`${BASE_URL}/api/v1/sessions/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.errors || `Refresh failed with status: ${response.status}`);
+        }
+
+        token = data.token;
+        localStorage.setItem("token", token);
+        return true;
+    } catch (error) {
+        localStorage.clear();
+        setupProfileDropdown();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+}
+
 // Profile Dropdown Functionality 
 function setupProfileDropdown() {
-    const userName = localStorage.getItem("user_name") || "User";
+    const userName = localStorage.getItem("user_name") || "Guest";
     const firstName = userName.split(" ")[0];
 
     if (profileIcon) {
@@ -43,13 +79,11 @@ function setupProfileDropdown() {
         <div class="bookstore-dash__profile-item bookstore-dash__profile-logout">Logout</div>
     `;
 
-    // Toggle dropdown on click
     profileIcon.addEventListener("click", (e) => {
         e.preventDefault();
         profileDropdown.classList.toggle("active");
     });
 
-    // Close dropdown when clicking outside
     document.addEventListener("click", (e) => {
         if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
             profileDropdown.classList.remove("active");
@@ -70,7 +104,6 @@ function setupProfileDropdown() {
         });
     }
 
-    // Navigate to wishlist
     const wishlistItem = profileDropdown.querySelector(".bookstore-dash__profile-wishlist");
     if (wishlistItem) {
         wishlistItem.addEventListener("click", () => {
@@ -78,7 +111,6 @@ function setupProfileDropdown() {
         });
     }
 
-    // Logout functionality
     const logoutItem = profileDropdown.querySelector(".bookstore-dash__profile-logout");
     if (logoutItem) {
         logoutItem.addEventListener("click", () => {
@@ -95,28 +127,30 @@ function setupProfileDropdown() {
 // Fetch and update cart count
 async function updateCartCount() {
     const userId = localStorage.getItem("user_id");
-    const token = localStorage.getItem("token");
 
     if (!userId || !token || !cartIcon) return;
 
+    let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
     try {
-        const response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+        let response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
             method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
+            headers: headers
         });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                alert("Session expired. Please log in again.");
-                localStorage.removeItem("token");
-                localStorage.removeItem("user_id");
-                localStorage.removeItem("user_name");
-                window.location.href = "../pages/login.html";
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+                    method: "GET",
+                    headers: headers
+                });
+            } else {
                 return;
             }
+        }
+
+        if (!response.ok) {
             throw new Error("Failed to fetch cart data");
         }
 
@@ -124,73 +158,65 @@ async function updateCartCount() {
         const cartCount = data.cart?.length || 0;
         cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${cartCount})`;
     } catch (error) {
-        console.error("Error fetching cart count:", error.message);
         cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (0)`;
     }
 }
 
 // Fetch Wishlist Items
-function fetchWishlist() {
-    const token = localStorage.getItem("token");
+async function fetchWishlist() {
     const userId = localStorage.getItem("user_id");
 
-    console.log("Fetching wishlist...");
-    console.log("User ID:", userId);
-    console.log("Token:", token);
-
     if (!token || !userId) {
-        console.log("User not logged in. Showing login prompt.");
         showLoginPrompt();
         return;
     }
 
-    console.log("User is logged in. Fetching wishlist data...");
-
-    fetch(`${BASE_URL}/api/v1/wishlists`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        }
-    })
-        .then((response) => {
-            console.log("Wishlist Fetch API Response Status:", response.status);
-            if (!response.ok) {
-                return response.json().then((err) => {
-                    throw new Error(err.error || `HTTP error! Status: ${response.status}`);
-                });
-            }
-            return response.json();
-        })
-        .then((data) => {
-            console.log("Wishlist API Response:", data);
-            if (data.message && Array.isArray(data.message)) {
-                console.log("Rendering wishlist with", data.message.length, "items.");
-                renderWishlist(data.message);
-            } else {
-                console.log("Invalid response format. Treating as empty wishlist.");
-                renderWishlist([]);
-            }
-        })
-        .catch((error) => {
-            console.error("Error fetching wishlist:", error.message);
-            if (error.message.includes("401")) {
-                console.log("Unauthorized: Token might be invalid or expired.");
-                alert("Session expired or invalid token. Please log in again.");
-                localStorage.removeItem("user_id");
-                localStorage.removeItem("user_name");
-                localStorage.removeItem("token");
-                window.location.reload();
-            } else {
-                console.log("Showing error message on wishlist page.");
-                if (wishlistBooks) {
-                    wishlistBooks.innerHTML = `<p>Error loading wishlist: ${error.message}</p>`;
-                } else {
-                    console.warn("wishlistBooks element not found in the DOM.");
-                }
-                showWishlistItems();
-            }
+    let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+    try {
+        let response = await fetch(`${BASE_URL}/api/v1/wishlists`, {
+            method: "GET",
+            headers: headers
         });
+
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${BASE_URL}/api/v1/wishlists`, {
+                    method: "GET",
+                    headers: headers
+                });
+            } else {
+                return;
+            }
+        }
+
+        if (!response.ok) {
+            return response.json().then((err) => {
+                throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+            });
+        }
+
+        const data = await response.json();
+        if (data.message && Array.isArray(data.message)) {
+            renderWishlist(data.message);
+        } else {
+            renderWishlist([]);
+        }
+    } catch (error) {
+        if (error.message.includes("401")) {
+            alert("Session expired or invalid token. Please log in again.");
+            localStorage.removeItem("user_id");
+            localStorage.removeItem("user_name");
+            localStorage.removeItem("token");
+            window.location.reload();
+        } else {
+            if (wishlistBooks) {
+                wishlistBooks.innerHTML = `<p>Error loading wishlist: ${error.message}</p>`;
+            }
+            showWishlistItems();
+        }
+    }
 }
 
 // Render Wishlist Items
@@ -225,7 +251,6 @@ function renderWishlist(wishlists) {
         wishlistItem.dataset.wishlistId = wishlist.id;
 
         if (!book || !book.id) {
-            console.warn("Wishlist item is missing book data:", wishlist);
             return;
         }
 
@@ -247,7 +272,6 @@ function renderWishlist(wishlists) {
         wishlistBooks.appendChild(wishlistItem);
     });
 
-    // Add delete event listeners
     document.querySelectorAll(".delete-wishlist-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
             const wishlistItem = e.target.closest(".wishlist-book");
@@ -260,67 +284,65 @@ function renderWishlist(wishlists) {
 }
 
 // Delete Wishlist Item
-function deleteWishlistItem(wishlistId) {
-    const token = localStorage.getItem("token");
+async function deleteWishlistItem(wishlistId) {
     const userId = localStorage.getItem("user_id");
 
-    console.log("Deleting wishlist item...");
-    console.log("User ID:", userId);
-    console.log("Token:", token);
-    console.log("Wishlist ID:", wishlistId);
-
     if (!token || !userId) {
-        console.log("User is not logged in. Redirecting to login page.");
         alert("Please log in to remove items from your wishlist.");
         window.location.href = "../pages/login.html";
         return;
     }
 
     if (!wishlistId) {
-        console.error("Wishlist ID is missing. Cannot delete item.");
         alert("Cannot delete this item due to missing data.");
         return;
     }
 
     if (confirm("Are you sure you want to remove this book from your wishlist?")) {
-        fetch(`${BASE_URL}/api/v1/wishlists/${wishlistId}`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            }
-        })
-            .then((response) => {
-                console.log("Wishlist Delete API Response Status:", response.status);
-                if (!response.ok) {
-                    return response.json().then((err) => {
-                        throw new Error(err.error || `HTTP error! Status: ${response.status}`);
-                    });
-                }
-                return response.json();
-            })
-            .then((data) => {
-                console.log("Delete Wishlist Response:", data);
-                if (data.message) {
-                    alert("Book removed from wishlist!");
-                    fetchWishlist(); // Refresh wishlist
-                } else {
-                    alert("Error removing book from wishlist.");
-                }
-            })
-            .catch((error) => {
-                console.error("Error deleting wishlist item:", error.message);
-                if (error.message.includes("401")) {
-                    console.log("Unauthorized: Token might be invalid or expired.");
-                    alert("Session expired or invalid token. Please log in again.");
-                    localStorage.removeItem("user_id");
-                    localStorage.removeItem("user_name");
-                    localStorage.removeItem("token");
-                    window.location.href = "../pages/login.html";
-                } else {
-                    alert("Failed to remove book from wishlist: " + error.message);
-                }
+        let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+        try {
+            let response = await fetch(`${BASE_URL}/api/v1/wishlists/${wishlistId}`, {
+                method: "PATCH",
+                headers: headers
             });
+
+            if (response.status === 401) {
+                const refreshed = await refreshAccessToken();
+                if (refreshed) {
+                    headers.Authorization = `Bearer ${token}`;
+                    response = await fetch(`${BASE_URL}/api/v1/wishlists/${wishlistId}`, {
+                        method: "PATCH",
+                        headers: headers
+                    });
+                } else {
+                    return;
+                }
+            }
+
+            if (!response.ok) {
+                return response.json().then((err) => {
+                    throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+                });
+            }
+
+            const data = await response.json();
+            if (data.message) {
+                alert("Book removed from wishlist!");
+                fetchWishlist();
+            } else {
+                alert("Error removing book from wishlist.");
+            }
+        } catch (error) {
+            if (error.message.includes("401")) {
+                alert("Session expired or invalid token. Please log in again.");
+                localStorage.removeItem("user_id");
+                localStorage.removeItem("user_name");
+                localStorage.removeItem("token");
+                window.location.href = "../pages/login.html";
+            } else {
+                alert("Failed to remove book from wishlist: " + error.message);
+            }
+        }
     }
 }
 
@@ -348,18 +370,15 @@ function showWishlistItems() {
 document.addEventListener("DOMContentLoaded", () => {
     setupProfileDropdown();
 
-    // Check login status
     const userId = localStorage.getItem("user_id");
-    const token = localStorage.getItem("token");
 
     if (userId && token) {
         fetchWishlist();
-        updateCartCount(); // Fetch and display cart count on page load
+        updateCartCount();
     } else {
         showLoginPrompt();
     }
 
-    // Login button redirect
     if (loginBtn) {
         loginBtn.addEventListener("click", () => {
             window.location.href = "../pages/login.html";
@@ -368,14 +387,12 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn("loginBtn element not found in the DOM.");
     }
 
-    // Cart icon redirect
     if (cartIcon) {
         cartIcon.addEventListener("click", () => {
-            window.location.href = "../pages/mycart.html"; // Redirect to My Cart page
+            window.location.href = "../pages/mycart.html";
         });
     }
 
-    // Redirect to dashboard when clicking the logo
     document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
         window.location.href = "../pages/bookStoreDashboard.html";
     });

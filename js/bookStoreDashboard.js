@@ -15,19 +15,51 @@ const BASE_URL = "http://127.0.0.1:3000";
 let debounceTimeout = null;
 let abortController = null;
 
-// Get token and user ID from localStorage (optional for logged-in users)
-const token = localStorage.getItem("token");
+// Get token and user ID from localStorage
+let token = localStorage.getItem("token"); 
+const refreshToken = localStorage.getItem("refresh_token"); 
 const userId = localStorage.getItem("user_id");
 
-// Headers with token (only used if token exists)
-const headers = token
-  ? {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    }
+// Headers with token (updated dynamically)
+let headers = token
+  ? { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
   : { "Content-Type": "application/json" };
 
-// Fetch Cart Count (only for logged-in users)
+// Function to refresh the access token
+async function refreshAccessToken() {
+  if (!refreshToken) {
+    localStorage.clear();
+    updateProfileUI();
+    window.location.href = "../pages/login.html";
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/sessions/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.errors || `Refresh failed with status: ${response.status}`);
+    }
+
+    token = data.token;
+    localStorage.setItem("token", token);
+    headers.Authorization = `Bearer ${token}`;
+    return true;
+  } catch (error) {
+    localStorage.clear();
+    updateProfileUI();
+    window.location.href = "../pages/login.html";
+    return false;
+  }
+}
+
+// Fetch Cart Count
 async function fetchCartCount() {
   if (!token || !userId) {
     updateCartCount(0);
@@ -35,21 +67,24 @@ async function fetchCartCount() {
   }
 
   try {
-    console.log("Fetching cart with token:", token);
-    const response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+    let response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
       method: "GET",
       headers: headers
     });
 
-    if (!response.ok) {
-      console.error(`Cart fetch failed with status: ${response.status}`);
-      if (response.status === 401) {
-        alert("Session expired. Please log in again.");
-        localStorage.clear();
-        updateProfileUI();
-        window.location.href = "../pages/login.html";
+    if (response.status === 401) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+          method: "GET",
+          headers: headers
+        });
+      } else {
         return;
       }
+    }
+
+    if (!response.ok) {
       throw new Error(`Error ${response.status}: Failed to fetch cart items`);
     }
 
@@ -61,7 +96,6 @@ async function fetchCartCount() {
     const cartItems = data.cart || [];
     updateCartCount(cartItems.length);
   } catch (error) {
-    console.error("Error fetching cart count:", error.message);
     updateCartCount(0);
   }
 }
@@ -71,67 +105,61 @@ function updateCartCount(count) {
   const cartIcon = document.getElementById("cartIcon");
   if (cartIcon) {
     cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${count})`;
-    cartIcon.style.display = token ? "block" : "none"; // Hide cart if not logged in
+    cartIcon.style.display = token ? "block" : "none";
   }
 }
 
-// Fetch Books from Backend (works for both logged-in and logged-out users)
-function fetchBooks(page = 1, sort = "relevance") {
-  if (abortController) {
-    abortController.abort();
-  }
+// Fetch Books
+async function fetchBooks(page = 1, sort = "relevance") {
+  if (abortController) abortController.abort();
   abortController = new AbortController();
 
   let url = `${BASE_URL}/api/v1/books?page=${page}&per_page=${perPage}`;
-  if (sort && sort !== "relevance") {
-    url += `&sort_by=${encodeURIComponent(sort)}`;
-  }
+  if (sort && sort !== "relevance") url += `&sort_by=${encodeURIComponent(sort)}`;
 
-  fetch(url, {
-    method: "GET",
-    headers: headers,
-    signal: abortController.signal
-  })
-    .then(response => {
-      if (!response.ok) {
-        console.error(`Books fetch failed with status: ${response.status}`);
-        if (response.status === 401 && token) {
-          alert("Session expired");
-          localStorage.clear();
-          window.location.href = "../pages/login.html";
-        }
-        return response.json().then(err => {
-          throw new Error(`Books error: ${JSON.stringify(err)}`);
-        });
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (!data.books || !Array.isArray(data.books) || !data.pagination) {
-        const errorMessage = data.message || "Invalid response format: Failed to retrieve books";
-        console.error("Error fetching books:", errorMessage);
-        bookGrid.innerHTML = `<p class="error-message">Error: ${errorMessage}</p>`;
-        return;
-      }
-      renderBooks(data.books);
-      renderPagination(data.pagination);
-      totalItems.textContent = data.pagination.total_count;
-    })
-    .catch(error => {
-      if (error.name === "AbortError") {
-        console.log("Fetch aborted");
-        return;
-      }
-      console.error("Books fetch error:", error.message);
-      bookGrid.innerHTML = `<p class="error-message">Error: ${error.message}</p>`;
+  try {
+    let response = await fetch(url, {
+      method: "GET",
+      headers: headers,
+      signal: abortController.signal
     });
+
+    if (response.status === 401 && token) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        response = await fetch(url, {
+          method: "GET",
+          headers: headers,
+          signal: abortController.signal
+        });
+      } else {
+        return;
+      }
+    }
+
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(`Books error: ${JSON.stringify(errData)}`);
+    }
+
+    const data = await response.json();
+    if (!data.books || !Array.isArray(data.books) || !data.pagination) {
+      throw new Error(data.message || "Invalid response format: Failed to retrieve books");
+    }
+    renderBooks(data.books);
+    renderPagination(data.pagination);
+    totalItems.textContent = data.pagination.total_count;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      return;
+    }
+    bookGrid.innerHTML = `<p class="error-message">Error: ${error.message}</p>`;
+  }
 }
 
-// Fetch Search Suggestions (works for both logged-in and logged-out users)
-function searchBooks(query) {
-  if (abortController) {
-    abortController.abort();
-  }
+// Fetch Search Suggestions
+async function searchBooks(query) {
+  if (abortController) abortController.abort();
   abortController = new AbortController();
 
   if (!query || query.trim().length === 0) {
@@ -139,44 +167,44 @@ function searchBooks(query) {
     return;
   }
 
-  fetch(`${BASE_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
-    method: "GET",
-    headers: headers,
-    signal: abortController.signal
-  })
-    .then(response => {
-      if (!response.ok) {
-        console.error(`Search fetch failed with status: ${response.status}`);
-        if (response.status === 401 && token) {
-          alert("Session expired");
-          localStorage.clear();
-          window.location.href = "../pages/login.html";
-        }
-        return response.json().then(err => {
-          throw new Error(`Search error: ${JSON.stringify(err)}`);
-        });
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (!data.suggestions || !Array.isArray(data.suggestions)) {
-        const errorMessage = data.message || "Invalid response format: Failed to retrieve search suggestions";
-        console.error("Error fetching suggestions:", errorMessage);
-        bookGrid.innerHTML = `<p class="error-message">Error: ${errorMessage}</p>`;
-        return;
-      }
-      renderBooks(data.suggestions);
-      renderPagination({ current_page: 1, total_pages: 1 });
-      totalItems.textContent = data.suggestions.length;
-    })
-    .catch(error => {
-      if (error.name === "AbortError") {
-        console.log("Fetch aborted");
-        return;
-      }
-      console.error("Search fetch error:", error.message);
-      bookGrid.innerHTML = `<p class="error-message">Error: ${error.message}</p>`;
+  try {
+    let response = await fetch(`${BASE_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
+      method: "GET",
+      headers: headers,
+      signal: abortController.signal
     });
+
+    if (response.status === 401 && token) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        response = await fetch(`${BASE_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
+          method: "GET",
+          headers: headers,
+          signal: abortController.signal
+        });
+      } else {
+        return;
+      }
+    }
+
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(`Search error: ${JSON.stringify(errData)}`);
+    }
+
+    const data = await response.json();
+    if (!data.suggestions || !Array.isArray(data.suggestions)) {
+      throw new Error(data.message || "Invalid response format: Failed to retrieve search suggestions");
+    }
+    renderBooks(data.suggestions);
+    renderPagination({ current_page: 1, total_pages: 1 });
+    totalItems.textContent = data.suggestions.length;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      return;
+    }
+    bookGrid.innerHTML = `<p class="error-message">Error: ${error.message}</p>`;
+  }
 }
 
 // Render Books to the Grid
@@ -306,12 +334,10 @@ function updateProfileUI() {
   const profileIcon = document.querySelector("#profileDropdownTrigger");
   if (!profileIcon) return;
 
-  // Set the profile icon text (always show "Guest" or firstName, dropdown will handle the rest)
   const userName = token && userId ? (localStorage.getItem("user_name") || "Guest") : "Guest";
   const firstName = userName.split(" ")[0];
   profileIcon.innerHTML = `<i class="fas fa-user"></i> ${firstName}`;
 
-  // Create or update the dropdown
   let profileDropdown = document.querySelector(".bookstore-dash__profile-dropdown");
   if (!profileDropdown) {
     profileDropdown = document.createElement("div");
@@ -319,7 +345,6 @@ function updateProfileUI() {
     document.querySelector(".bookstore-dash__header").appendChild(profileDropdown);
   }
 
-  // Set dropdown content based on login status
   if (!token || !userId) {
     profileDropdown.innerHTML = `
       <div class="bookstore-dash__profile-item">Hello, Guest</div>
@@ -337,20 +362,17 @@ function updateProfileUI() {
     `;
   }
 
-  // Toggle dropdown on click
   profileIcon.addEventListener("click", e => {
     e.preventDefault();
     profileDropdown.classList.toggle("active");
   });
 
-  // Close dropdown when clicking outside
   document.addEventListener("click", e => {
     if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
       profileDropdown.classList.remove("active");
     }
   });
 
-  // Add event listeners for dropdown items
   if (!token || !userId) {
     profileDropdown.querySelector(".bookstore-dash__profile-login").addEventListener("click", () => {
       window.location.href = "../pages/login.html";
@@ -385,7 +407,7 @@ function setupCartIconListener() {
   if (cartIcon) {
     cartIcon.addEventListener("click", () => {
       if (!token || !userId) {
-        window.location.href = "../pages/mycart.html"; // Direct redirect, no alert
+        window.location.href = "../pages/mycart.html";
         return;
       }
       window.location.href = "../pages/mycart.html";

@@ -10,9 +10,45 @@ const loginBtn = document.getElementById("loginBtn");
 const profileIcon = document.getElementById("profileDropdownTrigger");
 const cartIcon = document.getElementById("cartIcon");
 
-// Profile Dropdown Functionality (unchanged)
+// Token Management
+let token = localStorage.getItem("token");
+const refreshToken = localStorage.getItem("refresh_token");
+
+async function refreshAccessToken() {
+    if (!refreshToken) {
+        localStorage.clear();
+        setupProfileDropdown();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+
+    try {
+        const response = await fetch(`${BASE_URL}/api/v1/sessions/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.errors || `Refresh failed with status: ${response.status}`);
+        }
+
+        token = data.token;
+        localStorage.setItem("token", token);
+        return true;
+    } catch (error) {
+        localStorage.clear();
+        setupProfileDropdown();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+}
+
+// Profile Dropdown Functionality
 function setupProfileDropdown() {
-    const userName = localStorage.getItem("user_name") || "User";
+    const userName = localStorage.getItem("user_name") || "Guest";
     const firstName = userName.split(" ")[0];
 
     if (profileIcon) {
@@ -28,6 +64,7 @@ function setupProfileDropdown() {
         profileDropdown.className = "bookstore-dash__profile-dropdown";
         const header = document.querySelector(".bookstore-dash__header");
         if (header) header.appendChild(profileDropdown);
+        else console.warn("Header element not found in DOM");
     }
 
     profileDropdown.innerHTML = `
@@ -83,31 +120,35 @@ function setupProfileDropdown() {
     }
 }
 
-// Fetch and update cart count (unchanged)
+// Fetch and update cart count
 async function updateCartCount() {
     const userId = localStorage.getItem("user_id");
-    const token = localStorage.getItem("token");
 
-    if (!userId || !token || !cartIcon) return;
+    if (!userId || !token || !cartIcon) {
+        return;
+    }
 
+    let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
     try {
-        const response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+        let response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
             method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
+            headers: headers
         });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                alert("Session expired. Please log in again.");
-                localStorage.removeItem("token");
-                localStorage.removeItem("user_id");
-                localStorage.removeItem("user_name");
-                window.location.href = "../pages/login.html";
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+                    method: "GET",
+                    headers: headers
+                });
+            } else {
                 return;
             }
+        }
+
+        if (!response.ok) {
             throw new Error("Failed to fetch cart data");
         }
 
@@ -115,14 +156,12 @@ async function updateCartCount() {
         const cartCount = data.cart?.length || 0;
         cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${cartCount})`;
     } catch (error) {
-        console.error("Error fetching cart count:", error.message);
         cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (0)`;
     }
 }
 
-// Fetch Orders from Backend (unchanged)
-function fetchOrders() {
-    const token = localStorage.getItem("token");
+// Fetch Orders from Backend
+async function fetchOrders() {
     const userId = localStorage.getItem("user_id");
 
     if (!token || !userId) {
@@ -130,52 +169,53 @@ function fetchOrders() {
         return;
     }
 
-    fetch(`${BASE_URL}/api/v1/orders`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        }
-    })
-        .then((response) => {
-            if (!response.ok) {
-                return response.json().then((err) => {
-                    throw new Error(err.error || err.errors || `HTTP error! Status: ${response.status}`);
-                });
-            }
-            return response.json();
-        })
-        .then((data) => {
-            console.log("Orders Data:", data);
-            if (Array.isArray(data.orders)) {
-                renderOrders(data.orders);
-            } else {
-                renderOrders([]);
-            }
-        })
-        .catch((error) => {
-            console.error("Error fetching orders:", error.message);
-            if (error.message.includes("401")) {
-                alert("Session expired or invalid token. Please log in again.");
-                localStorage.removeItem("user_id");
-                localStorage.removeItem("user_name");
-                localStorage.removeItem("token");
-                window.location.reload();
-            } else if (error.message.includes("No orders found")) {
-                renderOrders([]);
-            } else {
-                ordersList.innerHTML = `<p>Error loading orders: ${error.message}</p>`;
-                showOrderItems();
-            }
+    let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+    try {
+        let response = await fetch(`${BASE_URL}/api/v1/orders`, {
+            method: "GET",
+            headers: headers
         });
+
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${BASE_URL}/api/v1/orders`, {
+                    method: "GET",
+                    headers: headers
+                });
+            } else {
+                return;
+            }
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || errorData.errors || `HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        renderOrders(Array.isArray(data.orders) ? data.orders : []);
+    } catch (error) {
+        if (error.message.includes("401")) {
+            localStorage.removeItem("user_id");
+            localStorage.removeItem("user_name");
+            localStorage.removeItem("token");
+            window.location.reload();
+        } else if (error.message.includes("No orders found")) {
+            renderOrders([]);
+        } else {
+            ordersList.innerHTML = `<p>Error loading orders: ${error.message}</p>`;
+            showOrderItems();
+        }
+    }
 }
 
-// Render Orders (Updated to exclude cancelled orders from count and display)
+// Render Orders
 function renderOrders(orders) {
     ordersList.innerHTML = "";
-    // Filter out cancelled orders
     const activeOrders = orders.filter(order => order.status !== "cancelled");
-    ordersTitle.textContent = `My Orders (${activeOrders.length})`; // Count only active orders
+    ordersTitle.textContent = `My Orders (${activeOrders.length})`;
 
     if (activeOrders.length === 0) {
         ordersList.innerHTML = `
@@ -194,16 +234,26 @@ function renderOrders(orders) {
 
     activeOrders.forEach((order) => {
         fetch(`${BASE_URL}/api/v1/books/${order.book_id}`, {
-            headers: {
-                "Authorization": `Bearer ${localStorage.getItem("token")}`
-            }
+            headers: { "Authorization": `Bearer ${token}` }
         })
             .then((response) => {
+                if (response.status === 401) {
+                    return refreshAccessToken().then(refreshed => {
+                        if (refreshed) {
+                            return fetch(`${BASE_URL}/api/v1/books/${order.book_id}`, {
+                                headers: { "Authorization": `Bearer ${token}` }
+                            });
+                        } else {
+                            throw new Error("Token refresh failed");
+                        }
+                    });
+                }
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                return response.json();
+                return response;
             })
+            .then((response) => response.json())
             .then((bookData) => {
                 const book = bookData.book || {};
                 const orderItem = document.createElement("div");
@@ -227,7 +277,6 @@ function renderOrders(orders) {
                 const totalPrice = Number(order.total_price) || 0;
                 const mrp = Number(book.mrp) || totalPrice;
 
-                // Only show cancel button for pending orders
                 const cancelButton = order.status === "pending" ? `
                     <button class="cancel-order-btn" data-order-id="${order.id}">Cancel</button>
                 ` : '';
@@ -253,14 +302,14 @@ function renderOrders(orders) {
                 
                 ordersList.appendChild(orderItem);
 
-                // Add event listener for cancel button
                 const cancelBtn = orderItem.querySelector('.cancel-order-btn');
                 if (cancelBtn) {
-                    cancelBtn.addEventListener('click', () => cancelOrder(order.id, orderItem));
+                    cancelBtn.addEventListener('click', () => {
+                        cancelOrder(order.id, orderItem);
+                    });
                 }
             })
             .catch((error) => {
-                console.error("Error fetching book for order:", order.id, "Error:", error.message);
                 const orderItem = document.createElement("div");
                 orderItem.className = "order-item";
                 orderItem.dataset.orderId = order.id;
@@ -301,46 +350,53 @@ function renderOrders(orders) {
     showOrderItems();
 }
 
-// Add new function to handle order cancellation (Updated)
-function cancelOrder(orderId, orderElement) {
-    const token = localStorage.getItem("token");
+// Handle order cancellation
+async function cancelOrder(orderId, orderElement) {
     if (!token) {
         alert("Please log in to cancel an order");
         return;
     }
 
     if (confirm("Are you sure you want to cancel this order?")) {
-        fetch(`${BASE_URL}/api/v1/orders/${orderId}`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({ status: "cancelled" })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.errors?.join(", ") || `HTTP error! Status: ${response.status}`);
-                });
+        let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+        try {
+            let response = await fetch(`${BASE_URL}/api/v1/orders/${orderId}`, {
+                method: "PATCH",
+                headers: headers,
+                body: JSON.stringify({ status: "cancelled" })
+            });
+
+            if (response.status === 401) {
+                const refreshed = await refreshAccessToken();
+                if (refreshed) {
+                    headers.Authorization = `Bearer ${token}`;
+                    response = await fetch(`${BASE_URL}/api/v1/orders/${orderId}`, {
+                        method: "PATCH",
+                        headers: headers,
+                        body: JSON.stringify({ status: "cancelled" })
+                    });
+                } else {
+                    return;
+                }
             }
-            return response.json();
-        })
-        .then(data => {
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.errors?.join(", ") || `HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
             if (data.message === "Order status updated successfully") {
-                // Refetch orders to ensure the count and display are updated
                 fetchOrders();
                 alert("Order cancelled successfully");
             }
-        })
-        .catch(error => {
-            console.error("Error cancelling order:", error);
+        } catch (error) {
             alert("Failed to cancel order: " + error.message);
-        });
+        }
     }
 }
 
-// Show Login Prompt (unchanged)
+// Show Login Prompt
 function showLoginPrompt() {
     if (loginPrompt && orderItems) {
         loginPrompt.style.display = "block";
@@ -348,7 +404,7 @@ function showLoginPrompt() {
     }
 }
 
-// Show Order Items (unchanged)
+// Show Order Items
 function showOrderItems() {
     if (loginPrompt && orderItems) {
         loginPrompt.style.display = "none";
@@ -356,12 +412,11 @@ function showOrderItems() {
     }
 }
 
-// Initial Setup (unchanged)
+// Initial Setup
 document.addEventListener("DOMContentLoaded", () => {
     setupProfileDropdown();
 
     const userId = localStorage.getItem("user_id");
-    const token = localStorage.getItem("token");
 
     if (userId && token) {
         fetchOrders();

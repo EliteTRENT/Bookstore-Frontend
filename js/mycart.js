@@ -1,8 +1,43 @@
 // API Base URL
 const API_BASE_URL = 'http://127.0.0.1:3000/api/v1';
 
+// Token Management
+let token = localStorage.getItem("token");
+const refreshToken = localStorage.getItem("refresh_token");
+
+async function refreshAccessToken() {
+    if (!refreshToken) {
+        localStorage.clear();
+        updateProfileUI();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/sessions/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.errors || `Refresh failed with status: ${response.status}`);
+        }
+
+        token = data.token;
+        localStorage.setItem("token", token);
+        return true;
+    } catch (error) {
+        localStorage.clear();
+        updateProfileUI();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
-    const token = localStorage.getItem('token');
     const userId = localStorage.getItem('user_id');
 
     if (!token || !userId) {
@@ -11,7 +46,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // Redirect to dashboard when clicking the logo
     document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
         window.location.href = "../pages/bookStoreDashboard.html";
     });
@@ -59,7 +93,6 @@ function setupUIEventListeners() {
 }
 
 function getAuthHeaders() {
-    const token = localStorage.getItem('token');
     return {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -79,22 +112,27 @@ async function loadCartItems(userId) {
 
     cartContainer.innerHTML = '<p>Loading cart...</p>';
 
+    let headers = getAuthHeaders();
     try {
-        const response = await fetch(`${API_BASE_URL}/carts/${userId}`, {
+        let response = await fetch(`${API_BASE_URL}/carts/${userId}`, {
             method: 'GET',
-            headers: getAuthHeaders()
+            headers: headers
         });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                alert("Session expired. Please log in again.");
-                localStorage.removeItem('token');
-                localStorage.removeItem('user_id');
-                localStorage.removeItem('user_name');
-                updateProfileUI();
-                window.location.href = '/pages/login.html';
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/carts/${userId}`, {
+                    method: 'GET',
+                    headers: headers
+                });
+            } else {
                 return;
             }
+        }
+
+        if (!response.ok) {
             throw new Error(`Error ${response.status}: Failed to fetch cart items`);
         }
 
@@ -215,6 +253,7 @@ async function updateQuantity(button, change) {
         return;
     }
 
+    let headers = getAuthHeaders();
     try {
         const requestBody = {
             cart: {
@@ -223,11 +262,25 @@ async function updateQuantity(button, change) {
             }
         };
 
-        const response = await fetch(`${API_BASE_URL}/carts`, {
+        let response = await fetch(`${API_BASE_URL}/carts`, {
             method: 'PATCH',
-            headers: getAuthHeaders(),
+            headers: headers,
             body: JSON.stringify(requestBody)
         });
+
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/carts`, {
+                    method: 'PATCH',
+                    headers: headers,
+                    body: JSON.stringify(requestBody)
+                });
+            } else {
+                return;
+            }
+        }
 
         const rawResponse = await response.text();
         let data;
@@ -262,11 +315,25 @@ async function removeCartItem(button) {
         return;
     }
 
+    let headers = getAuthHeaders();
     try {
-        const response = await fetch(`${API_BASE_URL}/carts/${bookId}`, {
+        let response = await fetch(`${API_BASE_URL}/carts/${bookId}`, {
             method: 'DELETE',
-            headers: getAuthHeaders()
+            headers: headers
         });
+
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/carts/${bookId}`, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+            } else {
+                return;
+            }
+        }
 
         if (response.status === 404) {
             try {

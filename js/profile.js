@@ -1,6 +1,6 @@
 const BASE_URL = "http://127.0.0.1:3000";
 
-// Toast notification function
+// Toast Notification
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -19,7 +19,7 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// Validation functions
+// Validation Functions
 function validateStreet(street) {
     return street.length >= 5 && street.length <= 100;
 }
@@ -60,16 +60,51 @@ function validateForm(addressData) {
     return errors;
 }
 
+// Token Management
+let token = localStorage.getItem("token");
+const refreshToken = localStorage.getItem("refresh_token");
+
+async function refreshAccessToken() {
+    if (!refreshToken) {
+        localStorage.clear();
+        updateProfileUI();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+
+    try {
+        const response = await fetch(`${BASE_URL}/api/v1/sessions/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.errors || `Refresh failed with status: ${response.status}`);
+        }
+
+        token = data.token;
+        localStorage.setItem("token", token);
+        return true;
+    } catch (error) {
+        localStorage.clear();
+        updateProfileUI();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+}
+
 // Profile Dropdown Functionality
 function updateProfileUI() {
-    const userName = localStorage.getItem("user_name") || "User";
+    const userName = localStorage.getItem("user_name") || "Guest";
     const firstName = userName.split(" ")[0];
 
     const profileIcon = document.getElementById("profileDropdownTrigger");
     if (profileIcon) {
         profileIcon.innerHTML = `<i class="fas fa-user"></i> ${firstName}`;
     } else {
-        console.warn("Profile dropdown trigger element not found in the DOM.");
         return;
     }
 
@@ -81,7 +116,6 @@ function updateProfileUI() {
         if (header) {
             header.appendChild(profileDropdown);
         } else {
-            console.warn("Header element not found in the DOM.");
             return;
         }
     }
@@ -133,32 +167,36 @@ function updateProfileUI() {
     }
 }
 
-// Fetch and update cart count
+// Fetch and Update Cart Count
 async function updateCartCount() {
     const userId = localStorage.getItem("user_id");
-    const token = localStorage.getItem("token");
     const cartIcon = document.getElementById("cartIcon");
 
-    if (!userId || !token || !cartIcon) return;
+    if (!userId || !token || !cartIcon) {
+        return;
+    }
 
+    let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
     try {
-        const response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+        let response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
             method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
+            headers: headers,
         });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                showToast("Session expired. Please log in again.", "error");
-                localStorage.removeItem("token");
-                localStorage.removeItem("user_id");
-                localStorage.removeItem("user_name");
-                window.location.href = "../pages/login.html";
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+                    method: "GET",
+                    headers: headers,
+                });
+            } else {
                 return;
             }
+        }
+
+        if (!response.ok) {
             throw new Error("Failed to fetch cart data");
         }
 
@@ -166,16 +204,15 @@ async function updateCartCount() {
         const cartCount = data.cart?.length || 0;
         cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (${cartCount})`;
     } catch (error) {
-        console.error("Error fetching cart count:", error.message);
         cartIcon.innerHTML = `<i class="fas fa-shopping-cart"></i> Cart (0)`;
+        showToast("Failed to fetch cart count", "error");
     }
 }
 
-// Fetch and display user data and addresses
+// Fetch and Display User Data and Addresses
 async function loadUserData() {
     const userId = localStorage.getItem("user_id");
     const userName = localStorage.getItem("user_name");
-    const token = localStorage.getItem("token");
     const email = localStorage.getItem("email");
     const mobileNumber = localStorage.getItem("mobile_number");
 
@@ -189,17 +226,27 @@ async function loadUserData() {
         document.getElementById("email").textContent = email || "[Not Available]";
         document.getElementById("mobile_number").textContent = mobileNumber || "[Not Available]";
 
-        const addressResponse = await fetch(`${BASE_URL}/api/v1/addresses`, {
+        let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+        let addressResponse = await fetch(`${BASE_URL}/api/v1/addresses`, {
             method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
+            headers: headers,
         });
+
+        if (addressResponse.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                addressResponse = await fetch(`${BASE_URL}/api/v1/addresses`, {
+                    method: "GET",
+                    headers: headers,
+                });
+            } else {
+                return;
+            }
+        }
 
         if (!addressResponse.ok) {
             const text = await addressResponse.text();
-            console.log("Fetch addresses raw response:", text);
             try {
                 const errorData = JSON.parse(text);
                 throw new Error(errorData.errors || "Failed to fetch addresses");
@@ -287,27 +334,36 @@ async function loadUserData() {
             setupAddressEventListeners();
         }
     } catch (error) {
-        console.error("Error loading user data:", error.message);
         showToast("Failed to load profile data: " + error.message, 'error');
     }
 }
 
-// Address CRUD operations
+// Address CRUD Operations
 async function addNewAddress(addressData) {
-    const token = localStorage.getItem("token");
+    let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
     try {
-        const response = await fetch(`${BASE_URL}/api/v1/addresses`, {
+        let response = await fetch(`${BASE_URL}/api/v1/addresses`, {
             method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
+            headers: headers,
             body: JSON.stringify({ address: addressData })
         });
 
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${BASE_URL}/api/v1/addresses`, {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify({ address: addressData })
+                });
+            } else {
+                return;
+            }
+        }
+
         if (!response.ok) {
             const text = await response.text();
-            console.log("Add address raw response:", text);
             try {
                 const errorData = JSON.parse(text);
                 throw new Error(errorData.errors || "Failed to add address");
@@ -320,27 +376,35 @@ async function addNewAddress(addressData) {
         showToast(result.message);
         loadUserData();
     } catch (error) {
-        console.error("Error adding address:", error.message);
         showToast("Failed to add address: " + error.message, 'error');
     }
 }
 
 async function updateAddress(addressId, addressData) {
-    const token = localStorage.getItem("token");
+    let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
     try {
-        console.log("Sending update payload:", addressData);
-        const response = await fetch(`${BASE_URL}/api/v1/addresses/${addressId}`, {
+        let response = await fetch(`${BASE_URL}/api/v1/addresses/${addressId}`, {
             method: "PATCH",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
+            headers: headers,
             body: JSON.stringify({ address: addressData })
         });
 
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${BASE_URL}/api/v1/addresses/${addressId}`, {
+                    method: "PATCH",
+                    headers: headers,
+                    body: JSON.stringify({ address: addressData })
+                });
+            } else {
+                return;
+            }
+        }
+
         if (!response.ok) {
             const text = await response.text();
-            console.log("Update address raw response:", text);
             try {
                 const errorData = JSON.parse(text);
                 throw new Error(errorData.errors || "Failed to update address");
@@ -353,33 +417,40 @@ async function updateAddress(addressId, addressData) {
         showToast(result.message);
         loadUserData();
     } catch (error) {
-        console.error("Error updating address:", error.message);
         showToast("Failed to update address: " + error.message, 'error');
     }
 }
 
 async function removeAddress(addressId) {
-    const token = localStorage.getItem("token");
+    let headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
     try {
-        const response = await fetch(`${BASE_URL}/api/v1/addresses/${addressId}`, {
+        let response = await fetch(`${BASE_URL}/api/v1/addresses/${addressId}`, {
             method: "DELETE",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
+            headers: headers,
         });
 
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${BASE_URL}/api/v1/addresses/${addressId}`, {
+                    method: "DELETE",
+                    headers: headers,
+                });
+            } else {
+                return;
+            }
+        }
+
         const result = await response.json();
-        console.log("Remove address response:", result);
 
         if (result.success) {
             showToast(result.message);
-            loadUserData(); // Refresh the address list
+            loadUserData();
         } else {
             showToast(result.message, 'error');
         }
     } catch (error) {
-        console.error("Error removing address:", error.message);
         showToast("An unexpected error occurred while removing the address", 'error');
     }
 }
@@ -427,7 +498,6 @@ function setupEventListeners() {
     });
 
     if (addAddressForm) {
-        // Real-time validation
         ['newStreet', 'newCity', 'newState', 'newZipCode', 'newCountry'].forEach(id => {
             const input = document.getElementById(id);
             input.addEventListener('input', () => {
@@ -507,8 +577,6 @@ function setupAddressEventListeners() {
                         type: addressItem.querySelector(`input[name="addressType${addressId}"]:checked`).value
                     };
                     
-                    console.log("Address data to update:", addressData); // Debug payload
-                    
                     const errors = validateForm(addressData);
                     if (errors.length > 0) {
                         showToast(errors.join(", "), "error");
@@ -549,9 +617,8 @@ document.addEventListener("DOMContentLoaded", () => {
     updateProfileUI();
     setupEventListeners();
     loadUserData();
-    updateCartCount(); // Fetch and display cart count on page load
+    updateCartCount();
 
-    // Redirect to dashboard when clicking the logo
     document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
         window.location.href = "../pages/bookStoreDashboard.html";
     });

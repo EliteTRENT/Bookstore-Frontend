@@ -1,7 +1,42 @@
 const API_BASE_URL = 'http://127.0.0.1:3000/api/v1';
 
+// Token Management
+let token = localStorage.getItem("token");
+const refreshToken = localStorage.getItem("refresh_token");
+
+async function refreshAccessToken() {
+    if (!refreshToken) {
+        localStorage.clear();
+        updateProfileUI();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/sessions/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.errors || `Refresh failed with status: ${response.status}`);
+        }
+
+        token = data.token;
+        localStorage.setItem("token", token);
+        return true;
+    } catch (error) {
+        localStorage.clear();
+        updateProfileUI();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
-    const token = localStorage.getItem('token');
     const userId = localStorage.getItem('user_id');
 
     if (!token || !userId) {
@@ -10,7 +45,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // Ensure the modal is hidden on page load
     const addAddressModal = document.getElementById("addAddressModal");
     if (addAddressModal) {
         addAddressModal.style.display = "none";
@@ -22,7 +56,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadCartItems(userId);
     await loadCustomerDetails(userId);
 
-    // Redirect to dashboard when clicking the logo
     document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
         window.location.href = "../pages/bookStoreDashboard.html";
     });
@@ -89,7 +122,6 @@ function setupUIEventListeners() {
 }
 
 function getAuthHeaders() {
-    const token = localStorage.getItem('token');
     return {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -109,22 +141,27 @@ async function loadCartItems(userId) {
 
     cartContainer.innerHTML = '<p>Loading cart...</p>';
 
+    let headers = getAuthHeaders();
     try {
-        const response = await fetch(`${API_BASE_URL}/carts/${userId}`, {
+        let response = await fetch(`${API_BASE_URL}/carts/${userId}`, {
             method: 'GET',
-            headers: getAuthHeaders()
+            headers: headers
         });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                alert("Session expired. Please log in again.");
-                localStorage.removeItem('token');
-                localStorage.removeItem('user_id');
-                localStorage.removeItem('user_name');
-                updateProfileUI();
-                window.location.href = '/pages/login.html';
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/carts/${userId}`, {
+                    method: 'GET',
+                    headers: headers
+                });
+            } else {
                 return;
             }
+        }
+
+        if (!response.ok) {
             throw new Error(`Error ${response.status}: Failed to fetch cart items`);
         }
 
@@ -134,12 +171,11 @@ async function loadCartItems(userId) {
         }
 
         const cartItems = data.cart || [];
-        localStorage.setItem('cartItems', JSON.stringify(cartItems)); // Update localStorage
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
         renderCartItems(cartItems);
         updateCartCount(cartItems.length);
         setupCartEventListeners();
     } catch (error) {
-        console.error("Error loading cart items:", error.message);
         cartContainer.innerHTML = `<p>Error loading cart: ${error.message}</p>`;
     }
 }
@@ -211,15 +247,12 @@ async function updateQuantity(button, change) {
     const quantityElement = cartItem.querySelector('.quantity-input');
     const priceElement = cartItem.querySelector('.current-price');
 
-    console.log("Updating quantity for bookId:", bookId, "userId:", userId);
-
     if (!bookId || !userId || !quantityElement || !priceElement) {
         showToast("Error: Missing required elements.", 'error');
         return;
     }
 
     let currentQuantity = parseInt(quantityElement.value, 10);
-    console.log("Current quantity:", currentQuantity);
 
     if (isNaN(currentQuantity)) {
         showToast("Error: Invalid quantity.", 'error');
@@ -227,22 +260,20 @@ async function updateQuantity(button, change) {
     }
 
     const newQuantity = currentQuantity + change;
-    console.log("New quantity:", newQuantity);
 
     if (newQuantity <= 0) {
-        console.log("Quantity <= 0, removing item...");
         await removeCartItem(button);
         return;
     }
 
     const perUnitPrice = parseFloat(cartItem.dataset.price);
-    console.log("Per unit price:", perUnitPrice);
 
     if (isNaN(perUnitPrice)) {
         showToast("Error: Invalid price.", 'error');
         return;
     }
 
+    let headers = getAuthHeaders();
     try {
         const requestBody = {
             cart: {
@@ -250,23 +281,31 @@ async function updateQuantity(button, change) {
                 quantity: newQuantity
             }
         };
-        console.log("Sending request to update quantity:", requestBody);
 
-        const response = await fetch(`${API_BASE_URL}/carts`, {
+        let response = await fetch(`${API_BASE_URL}/carts`, {
             method: 'PATCH',
-            headers: getAuthHeaders(),
+            headers: headers,
             body: JSON.stringify(requestBody)
         });
 
-        console.log("Response status:", response.status);
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/carts`, {
+                    method: 'PATCH',
+                    headers: headers,
+                    body: JSON.stringify(requestBody)
+                });
+            } else {
+                return;
+            }
+        }
 
         const rawResponse = await response.text();
-        console.log("Raw response:", rawResponse);
-
         let data;
         try {
             data = JSON.parse(rawResponse);
-            console.log("Parsed response data:", data);
         } catch (parseError) {
             throw new Error('Failed to parse response from server');
         }
@@ -279,10 +318,8 @@ async function updateQuantity(button, change) {
             throw new Error(data.error || "Failed to update quantity");
         }
 
-        console.log("Quantity updated successfully, reloading cart...");
         await loadCartItems(userId);
     } catch (error) {
-        console.error("Error updating quantity:", error.message);
         showToast(`Failed to update quantity: ${error.message}`, 'error');
         quantityElement.value = currentQuantity;
     }
@@ -298,51 +335,51 @@ async function removeCartItem(button) {
         return;
     }
 
+    let headers = getAuthHeaders();
     try {
-        console.log(`Removing item with bookId: ${bookId}`);
-        const response = await fetch(`${API_BASE_URL}/remove_book/${bookId}`, {
+        let response = await fetch(`${API_BASE_URL}/carts/${bookId}`, {
             method: 'DELETE',
-            headers: getAuthHeaders()
+            headers: headers
         });
 
-        console.log("Remove response status:", response.status);
-        console.log("Response headers:", [...response.headers.entries()]);
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/carts/${bookId}`, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+            } else {
+                return;
+            }
+        }
 
         if (response.status === 204 || (response.status >= 200 && response.status < 300)) {
-            console.log(`Item removed successfully (status ${response.status}), reloading cart...`);
             await loadCartItems(userId);
             showToast("Item removed successfully!", 'success');
             return;
         }
 
         const rawResponse = await response.text();
-        console.log("Raw response:", rawResponse || "Empty response");
-
         let data;
         try {
             data = rawResponse ? JSON.parse(rawResponse) : {};
-            console.log("Parsed response data:", data);
         } catch (parseError) {
-            console.error("Parsing error:", parseError.message);
             throw new Error('Failed to parse response from server: ' + parseError.message);
         }
 
         if (!response.ok) {
-            console.log("Response not OK, throwing error...");
             throw new Error(data.error || `HTTP error ${response.status}: Failed to remove item`);
         }
 
-        console.log("Checking success condition...");
         if (data.success || (data.message && data.message.toLowerCase().includes("successfully"))) {
-            console.log("Success condition met, reloading cart...");
             await loadCartItems(userId);
             showToast("Item removed successfully!", 'success');
         } else {
-            console.log("Success condition not met, throwing error...");
             throw new Error(data.error || "Failed to remove item: Unexpected response");
         }
     } catch (error) {
-        console.error("Error removing item:", error.message);
         showToast(`Failed to remove item: ${error.message}`, 'error');
         await loadCartItems(userId);
     }
@@ -402,22 +439,27 @@ function updateProfileUI() {
 }
 
 async function loadCustomerDetails(userId) {
+    let headers = getAuthHeaders();
     try {
-        const response = await fetch(`${API_BASE_URL}/addresses`, {
+        let response = await fetch(`${API_BASE_URL}/addresses`, {
             method: 'GET',
-            headers: getAuthHeaders()
+            headers: headers
         });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                alert("Session expired. Please log in again.");
-                localStorage.removeItem('token');
-                localStorage.removeItem('user_id');
-                localStorage.removeItem('user_name');
-                updateProfileUI();
-                window.location.href = '/pages/login.html';
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/addresses`, {
+                    method: 'GET',
+                    headers: headers
+                });
+            } else {
                 return;
             }
+        }
+
+        if (!response.ok) {
             const errorData = await response.json();
             throw new Error(`Error ${response.status}: ${errorData.error || 'Failed to fetch customer details'}`);
         }
@@ -504,44 +546,36 @@ async function saveCustomerDetails(userId) {
 }
 
 async function addNewAddress(addressData) {
-    const token = localStorage.getItem("token");
-    if (!token) {
-        alert("Please log in first.");
-        window.location.href = "/pages/login.html";
-        return;
-    }
-
+    let headers = getAuthHeaders();
     try {
-        const response = await fetch(`${API_BASE_URL}/addresses`, {
+        let response = await fetch(`${API_BASE_URL}/addresses`, {
             method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
+            headers: headers,
             body: JSON.stringify({ address: addressData })
         });
 
-        if (response.status !== 201 && !response.ok) {
-            if (response.status === 401) {
-                alert("Session expired. Please log in again.");
-                localStorage.removeItem("token");
-                localStorage.removeItem("user_id");
-                localStorage.removeItem("user_name");
-                updateProfileUI();
-                window.location.href = "/pages/login.html";
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/addresses`, {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify({ address: addressData })
+                });
+            } else {
                 return;
             }
+        }
 
+        if (response.status !== 201 && !response.ok) {
             const text = await response.text();
             let errorMessage = "Failed to add address";
             try {
                 const errorData = JSON.parse(text);
-                // Check if 'message' is an array and join it, or use it directly
-                if (errorData.message) {
-                    errorMessage = Array.isArray(errorData.message) 
-                        ? errorData.message.join(", ") 
-                        : errorData.message;
-                }
+                errorMessage = Array.isArray(errorData.message)
+                    ? errorData.message.join(", ")
+                    : errorData.message || errorMessage;
             } catch {
                 errorMessage = "Server error: " + text.slice(0, 100);
             }
@@ -623,5 +657,4 @@ function setupAddressModalListeners() {
     }
 }
 
-// Ensure profile UI is updated on page load
 updateProfileUI();

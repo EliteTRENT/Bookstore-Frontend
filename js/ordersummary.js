@@ -1,7 +1,42 @@
 const API_BASE_URL = 'http://127.0.0.1:3000/api/v1';
 
+// Token Management
+let token = localStorage.getItem("token");
+const refreshToken = localStorage.getItem("refresh_token");
+
+async function refreshAccessToken() {
+    if (!refreshToken) {
+        localStorage.clear();
+        updateProfileUI();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/sessions/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.errors || `Refresh failed with status: ${response.status}`);
+        }
+
+        token = data.token;
+        localStorage.setItem("token", token);
+        return true;
+    } catch (error) {
+        localStorage.clear();
+        updateProfileUI();
+        window.location.href = "../pages/login.html";
+        return false;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
-    const token = localStorage.getItem('token');
     const userId = localStorage.getItem('user_id');
 
     if (!token || !userId) {
@@ -16,7 +51,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadCustomerDetails(userId);
     await loadOrderSummary();
 
-    // Redirect to dashboard when clicking the logo
     document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
         window.location.href = "../pages/bookStoreDashboard.html";
     });
@@ -27,11 +61,11 @@ function showToast(message, type = 'success') {
     toast.className = `toast ${type}`;
     toast.textContent = message;
     document.body.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.classList.add('show');
     }, 100);
-    
+
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => {
@@ -66,7 +100,6 @@ function setupUIEventListeners() {
 }
 
 function getAuthHeaders() {
-    const token = localStorage.getItem('token');
     return {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -86,22 +119,27 @@ async function loadCartItems(userId) {
 
     cartContainer.innerHTML = '<p>Loading cart...</p>';
 
+    let headers = getAuthHeaders();
     try {
-        const response = await fetch(`${API_BASE_URL}/carts/${userId}`, {
+        let response = await fetch(`${API_BASE_URL}/carts/${userId}`, {
             method: 'GET',
-            headers: getAuthHeaders()
+            headers: headers
         });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                alert("Session expired. Please log in again.");
-                localStorage.removeItem('token');
-                localStorage.removeItem('user_id');
-                localStorage.removeItem('user_name');
-                updateProfileUI();
-                window.location.href = '/pages/login.html';
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/carts/${userId}`, {
+                    method: 'GET',
+                    headers: headers
+                });
+            } else {
                 return;
             }
+        }
+
+        if (!response.ok) {
             throw new Error(`Error ${response.status}: Failed to fetch cart items`);
         }
 
@@ -212,6 +250,7 @@ async function updateQuantity(button, change) {
         return;
     }
 
+    let headers = getAuthHeaders();
     try {
         const requestBody = {
             cart: {
@@ -220,11 +259,25 @@ async function updateQuantity(button, change) {
             }
         };
 
-        const response = await fetch(`${API_BASE_URL}/carts`, {
+        let response = await fetch(`${API_BASE_URL}/carts`, {
             method: 'PATCH',
-            headers: getAuthHeaders(),
+            headers: headers,
             body: JSON.stringify(requestBody)
         });
+
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/carts`, {
+                    method: 'PATCH',
+                    headers: headers,
+                    body: JSON.stringify(requestBody)
+                });
+            } else {
+                return;
+            }
+        }
 
         const rawResponse = await response.text();
         let data;
@@ -260,12 +313,26 @@ async function removeCartItem(button) {
         return;
     }
 
+    let headers = getAuthHeaders();
     try {
         console.log(`Removing item with bookId: ${bookId}`);
-        const response = await fetch(`${API_BASE_URL}/carts/${bookId}`, {
+        let response = await fetch(`${API_BASE_URL}/carts/${bookId}`, {
             method: 'DELETE',
-            headers: getAuthHeaders()
+            headers: headers
         });
+
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                response = await fetch(`${API_BASE_URL}/carts/${bookId}`, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+            } else {
+                return;
+            }
+        }
 
         console.log("Remove response status:", response.status);
         console.log("Response headers:", [...response.headers.entries()]);
@@ -374,22 +441,27 @@ async function loadCustomerDetails(userId) {
     let selectedAddress = JSON.parse(localStorage.getItem('selectedAddress') || '{}');
 
     if (!selectedAddress.id) {
+        let headers = getAuthHeaders();
         try {
-            const response = await fetch(`${API_BASE_URL}/addresses`, {
+            let response = await fetch(`${API_BASE_URL}/addresses`, {
                 method: 'GET',
-                headers: getAuthHeaders()
+                headers: headers
             });
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    alert("Session expired. Please log in again.");
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user_id');
-                    localStorage.removeItem('user_name');
-                    updateProfileUI();
-                    window.location.href = '/pages/login.html';
+            if (response.status === 401) {
+                const refreshed = await refreshAccessToken();
+                if (refreshed) {
+                    headers.Authorization = `Bearer ${token}`;
+                    response = await fetch(`${API_BASE_URL}/addresses`, {
+                        method: 'GET',
+                        headers: headers
+                    });
+                } else {
                     return;
                 }
+            }
+
+            if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(`Error ${response.status}: ${errorData.error || 'Failed to fetch customer details'}`);
             }
@@ -434,7 +506,7 @@ async function loadCustomerDetails(userId) {
 function populateCustomerDetails(userData, address) {
     const fullNameInput = document.querySelector('.form-group input[value="Poonam Yadav"]');
     const mobileInput = document.querySelector('.form-group input[value="81678954778"]');
-    
+
     if (fullNameInput) fullNameInput.value = userData.name || 'Poonam Yadav';
     if (mobileInput) mobileInput.value = userData.number || '81678954778';
 
@@ -516,12 +588,26 @@ async function handleCheckout() {
     let remainingCartItems = [...cartItems];
     let allOrdersSuccessful = true;
 
+    let headers = getAuthHeaders();
     try {
         const bookIds = cartItems.map(item => item.book_id).join(',');
-        const stockResponse = await fetch(`${API_BASE_URL}/books/stock?book_ids=${bookIds}`, {
+        let stockResponse = await fetch(`${API_BASE_URL}/books/stock?book_ids=${bookIds}`, {
             method: 'GET',
-            headers: getAuthHeaders()
+            headers: headers
         });
+
+        if (stockResponse.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+                headers.Authorization = `Bearer ${token}`;
+                stockResponse = await fetch(`${API_BASE_URL}/books/stock?book_ids=${bookIds}`, {
+                    method: 'GET',
+                    headers: headers
+                });
+            } else {
+                return;
+            }
+        }
 
         if (!stockResponse.ok) {
             showToast("Failed to fetch stock quantities. Please try again.", 'error');
@@ -563,9 +649,9 @@ async function handleCheckout() {
             const quantity = parseInt(item.quantity, 10) || 1;
             const itemTotal = (discountedPrice * quantity).toFixed(2);
 
-            const response = await fetch(`${API_BASE_URL}/orders`, {
+            let response = await fetch(`${API_BASE_URL}/orders`, {
                 method: 'POST',
-                headers: getAuthHeaders(),
+                headers: headers,
                 body: JSON.stringify({
                     order: {
                         user_id: localStorage.getItem('user_id'),
@@ -579,13 +665,26 @@ async function handleCheckout() {
             });
 
             if (response.status === 401) {
-                alert("Session expired. Please log in again.");
-                localStorage.removeItem('token');
-                localStorage.removeItem('user_id');
-                localStorage.removeItem('user_name');
-                updateProfileUI();
-                window.location.href = '/pages/login.html';
-                return;
+                const refreshed = await refreshAccessToken();
+                if (refreshed) {
+                    headers.Authorization = `Bearer ${token}`;
+                    response = await fetch(`${API_BASE_URL}/orders`, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            order: {
+                                user_id: localStorage.getItem('user_id'),
+                                address_id: selectedAddress.id,
+                                book_id: item.book_id,
+                                quantity: quantity,
+                                price_at_purchase: discountedPrice,
+                                total_price: itemTotal
+                            }
+                        })
+                    });
+                } else {
+                    return;
+                }
             }
 
             const orderData = await response.json();
