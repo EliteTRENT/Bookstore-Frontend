@@ -1,0 +1,110 @@
+<!-- pages/callback.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Callback</title>
+  <link rel="stylesheet" href="../styles/login.css">
+</head>
+<body>
+  <div class="container">
+    <div class="left-section">
+      <div class="illustration">
+        <img src="../assets/cart.png" alt="Online Book Shopping">
+      </div>
+      <div class="title">ONLINE BOOK SHOPPING</div>
+    </div>
+    <div class="right-section">
+      <h1>Processing GitHub Login...</h1>
+    </div>
+  </div>
+  <script src="../env.js"></script>
+  <script src="../js/login.js"></script>
+  <script>
+    console.log("callback.html script started");
+    console.log("showToast function available:", typeof showToast);
+
+    function handleGithubCallback() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get("code");
+
+      console.log("Code from URL:", code);
+
+      if (!code) {
+        console.log("No code, redirecting...");
+        if (typeof showToast === "function") {
+          showToast("No authorization code received", "error");
+        } else {
+          console.log("showToast not available, skipping toast");
+        }
+        setTimeout(() => window.location.href = "login.html", 1000);
+        return;
+      }
+
+      console.log("Sending fetch request with code:", code);
+      fetch("http://localhost:3000/api/v1/github_auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ code: code }),
+        mode: "cors"
+      })
+        .then(response => {
+          console.log("Fetch response status:", response.status);
+          if (!response.ok) {
+            return response.text().then(text => {
+              console.log("Fetch error response text:", text);
+              try {
+                const err = JSON.parse(text);
+                throw new Error(err.details || err.error || "GitHub login failed");
+              } catch {
+                throw new Error(`GitHub login failed: Unexpected response - ${text}`);
+              }
+            });
+          }
+          return response.json();
+        })
+        .then(result => {
+          console.log("Fetch response JSON:", result);
+          localStorage.setItem("user_id", result.user_id);
+          localStorage.setItem("user_name", result.user_name);
+          localStorage.setItem("token", result.token);
+          localStorage.setItem("refresh_token", result.refresh_token);
+          localStorage.setItem("email", result.email);
+          localStorage.setItem("mobile_number", result.mobile_number);
+          localStorage.setItem("role", result.role || "user");
+          console.log("Stored token:", result.token);
+          console.log("Stored refresh_token:", result.refresh_token);
+
+          // Show toast if available, but don't let it block the redirect
+          if (typeof showToast === "function") {
+            console.log("Showing success toast...");
+            showToast(result.message || "Login successful!", "success");
+          } else {
+            console.log("showToast not available, skipping toast");
+          }
+
+          // Always redirect
+          console.log("Redirecting to bookStoreDashboard.html...");
+          setTimeout(() => {
+            window.location.href = "bookStoreDashboard.html";
+          }, 1000);
+        })
+        .catch(error => {
+          console.error("Fetch error:", error.message);
+          if (typeof showToast === "function") {
+            showToast(`GitHub login failed: ${error.message}`, "error");
+          } else {
+            console.log("showToast not available, skipping toast");
+          }
+          setTimeout(() => window.location.href = "login.html", 1000);
+        });
+    }
+
+    handleGithubCallback();
+  </script>
+</body>
+</html>

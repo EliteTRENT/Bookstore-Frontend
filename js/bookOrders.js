@@ -96,7 +96,7 @@ function setupProfileDropdown() {
     const ordersItem = profileDropdown.querySelector(".bookstore-dash__profile-orders");
     if (ordersItem) {
         ordersItem.addEventListener("click", () => {
-            window.location.href = "../pages/bookOrders.html";
+            v1 = "../pages/bookOrders.html";
         });
     }
 

@@ -1,3 +1,4 @@
+// login.js (full updated code)
 document.addEventListener("DOMContentLoaded", function () {
   const loginForm = document.getElementById("loginForm");
   if (!loginForm) {
@@ -10,6 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const submitButton = loginForm.querySelector(".login-btn");
   const togglePassword = document.querySelector(".toggle-password");
   const googleSignInBtn = document.getElementById("googleSignInBtn");
+  const githubSignInBtn = document.querySelector(".github-btn");
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|ask)\.[a-zA-Z]{2,}$/;
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!#%*?&])[A-Za-z\d@$!%#*?&]{8,}$/;
@@ -38,7 +40,18 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const GOOGLE_CLIENT_ID = window.env.GOOGLE_CLIENT_ID;
+  const GITHUB_CLIENT_ID = window.env.GITHUB_CLIENT_ID;
 
+  // GitHub Sign-In Handler
+  githubSignInBtn.addEventListener("click", function () {
+    const redirectUri = "http://localhost:5500/pages/callback.html"; // Updated to callback.html
+    const scope = "user:email";
+    const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scope}`;
+    console.log("Redirecting to GitHub:", authUrl);
+    window.location.href = authUrl; // Redirect to GitHub
+  });
+
+  // Google Sign-In Handler (unchanged)
   window.handleGoogleSignIn = function (response) {
     const idToken = response.credential;
     console.log("Google ID token received:", idToken);
@@ -69,16 +82,16 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("user_id", result.user_id);
         localStorage.setItem("user_name", result.user_name);
         localStorage.setItem("token", result.token);
-        localStorage.setItem("refresh_token", result.refresh_token); // Add refresh token
+        localStorage.setItem("refresh_token", result.refresh_token);
         localStorage.setItem("email", result.email);
         localStorage.setItem("mobile_number", result.mobile_number);
-        localStorage.setItem("role", result.role || "user"); // Default to "user" if role isn’t provided
+        localStorage.setItem("role", result.role || "user");
         console.log("Stored token:", result.token);
         console.log("Stored refresh_token:", result.refresh_token);
         showToast(result.message || "Login successful!", "success");
         setTimeout(() => {
           window.location.href = "bookStoreDashboard.html";
-        }, 1000); // Delay redirect to show toast
+        }, 1000);
       })
       .catch(error => {
         console.error("Google Sign-In error:", error.message);
@@ -192,7 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
         loginForm.reset();
         setTimeout(() => {
           window.location.href = "bookStoreDashboard.html";
-        }, 1000); // Delay redirect to show toast
+        }, 1000);
       } else {
         console.error("Normal login error response:", result);
         if (result.errors === "Email not registered.") {
