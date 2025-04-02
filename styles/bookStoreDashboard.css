@@ -442,6 +442,35 @@ body {
     background-color: rgba(255, 0, 0, 0.9);
 }
 
+/* Toast Styles */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 4px;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 1000;
+  }
+  
+  .toast-success {
+    background-color: #28a745; /* Green for success */
+  }
+  
+  .toast-error {
+    background-color: #dc3545; /* Red for error */
+  }
+  
+  .toast-info {
+    background-color: #17a2b8; /* Cyan for info */
+  }
+  
+  .toast.show {
+    opacity: 1;
+  }
+
 /* Media Queries for Responsiveness */
 @media (max-width: 1024px) {
     .bookstore-dash__grid {

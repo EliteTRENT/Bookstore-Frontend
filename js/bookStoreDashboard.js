@@ -25,6 +25,26 @@ let headers = token
   ? { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
   : { "Content-Type": "application/json" };
 
+// Toast Notification Function (adapted from login.js)
+function showToast(message, type = "info") {
+  console.log(`Showing toast: ${message} (type: ${type})`);
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add("show");
+  }, 100);
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 3000);
+}
+
 // Function to refresh the access token
 async function refreshAccessToken() {
   if (!refreshToken) {
@@ -97,6 +117,7 @@ async function fetchBooks(page = 1, sort = "relevance") {
 
   let url = `${BASE_URL}/api/v1/books?page=${page}&per_page=${perPage}`;
   if (sort && sort !== "relevance") url += `&sort_by=${encodeURIComponent(sort)}`;
+  const fallbackUrl = `http://127.0.0.1:3001/books?page=${page}&per_page=${perPage}`;
 
   try {
     let response = await fetch(url, { method: "GET", headers, signal: abortController.signal });
@@ -107,8 +128,7 @@ async function fetchBooks(page = 1, sort = "relevance") {
     }
 
     if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(`Books error: ${JSON.stringify(errData)}`);
+      throw new Error(`Books error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -120,7 +140,37 @@ async function fetchBooks(page = 1, sort = "relevance") {
     totalItems.textContent = data.pagination.total_count;
   } catch (error) {
     if (error.name === "AbortError") return;
-    bookGrid.innerHTML = `<p class="error-message">Error: ${error.message}</p>`;
+
+    // Fallback to json-server
+    console.warn("Main backend failed, falling back to json-server:", error.message);
+    try {
+      const fallbackResponse = await fetch(fallbackUrl, {
+        method: "GET",
+        signal: abortController.signal
+      });
+      if (!fallbackResponse.ok) {
+        throw new Error(`Fallback error: ${fallbackResponse.status}`);
+      }
+
+      const fallbackData = await fallbackResponse.json();
+      // Since json-server returns just the books array at /books, wrap it in the expected structure
+      const mockData = {
+        books: fallbackData,
+        pagination: {
+          current_page: page,
+          per_page: perPage,
+          total_pages: 1, // Adjust based on your mock data
+          total_count: fallbackData.length
+        }
+      };
+      renderBooks(mockData.books);
+      renderPagination(mockData.pagination);
+      totalItems.textContent = mockData.pagination.total_count;
+      showToast("Using fallback data due to backend unavailability", "warning");
+    } catch (fallbackError) {
+      if (fallbackError.name === "AbortError") return;
+      bookGrid.innerHTML = `<p class="error-message">Error: ${fallbackError.message}</p>`;
+    }
   }
 }
 
@@ -169,7 +219,7 @@ async function searchBooks(query) {
   }
 }
 
-// Render Books to the Grid
+// Render Books
 function renderBooks(books) {
   bookGrid.innerHTML = "";
   if (!books || books.length === 0) {
@@ -198,26 +248,29 @@ function renderBooks(books) {
     );
   });
 
-  // Use event delegation instead of attaching listeners to each button
-  bookGrid.addEventListener("click", e => {
-    const quickViewBtn = e.target.closest(".bookstore-dash__quick-view");
-    const deleteBtn = e.target.closest(".bookstore-dash__delete-btn");
+  // Remove old listeners and add a single event delegation
+  bookGrid.removeEventListener("click", handleBookGridClick);
+  bookGrid.addEventListener("click", handleBookGridClick);
+}
 
-    if (quickViewBtn) {
-      const bookCard = quickViewBtn.closest(".bookstore-dash__book-card");
-      const bookId = bookCard.getAttribute("data-book-id");
-      window.location.href = `/pages/bookdetails.html?bookId=${bookId}`;
-    } else if (deleteBtn) {
-      const bookId = deleteBtn.getAttribute("data-book-id");
-      deleteBook(bookId);
-    }
-  });
+function handleBookGridClick(e) {
+  const quickViewBtn = e.target.closest(".bookstore-dash__quick-view");
+  const deleteBtn = e.target.closest(".bookstore-dash__delete-btn");
+
+  if (quickViewBtn) {
+    const bookCard = quickViewBtn.closest(".bookstore-dash__book-card");
+    const bookId = bookCard.getAttribute("data-book-id");
+    window.location.href = `/pages/bookdetails.html?bookId=${bookId}`;
+  } else if (deleteBtn) {
+    const bookId = deleteBtn.getAttribute("data-book-id");
+    deleteBook(bookId);
+  }
 }
 
 // Delete Book
 async function deleteBook(bookId) {
   if (!token) {
-    alert("Please log in to delete a book.");
+    showToast("Please log in to delete a book.", "error");
     window.location.href = "../pages/login.html";
     return;
   }
@@ -225,37 +278,49 @@ async function deleteBook(bookId) {
   if (!confirm("Are you sure you want to delete this book?")) return;
 
   try {
+    console.log(`Attempting to delete book with ID: ${bookId}`);
     const response = await fetch(`${BASE_URL}/api/v1/books/delete/${bookId}`, {
       method: "PATCH",
       headers
     });
 
+    const responseData = await response.json();
+    console.log(`Delete response status: ${response.status}, data:`, responseData);
+
     if (response.status === 401) {
       const refreshed = await refreshAccessToken();
-      if (!refreshed) return;
-      const retryResponse = await fetch(`${BASE_URL}/api/v1/books/delete/${bookId}`, { method: "PATCH", headers });
-      if (!retryResponse.ok) throw new Error(`HTTP error! Status: ${retryResponse.status}`);
+      if (!refreshed) {
+        showToast("Session expired. Please log in again.", "error");
+        return;
+      }
+      const retryResponse = await fetch(`${BASE_URL}/api/v1/books/delete/${bookId}`, {
+        method: "PATCH",
+        headers
+      });
       const retryData = await retryResponse.json();
+      if (!retryResponse.ok) {
+        throw new Error(retryData.error || `Retry failed with status: ${retryResponse.status}`);
+      }
       handleDeleteSuccess(retryData);
     } else if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(errData.error || `HTTP error! Status: ${response.status}`);
+      throw new Error(responseData.error || `HTTP error! Status: ${response.status}`);
     } else {
-      const data = await response.json();
-      handleDeleteSuccess(data);
+      handleDeleteSuccess(responseData);
     }
   } catch (error) {
     console.error("Error deleting book:", error.message);
-    alert(`Failed to delete book: ${error.message}`);
+    showToast(`Failed to delete book: ${error.message}`, "error");
   }
 }
 
+// Handle Delete Success with Toast
 function handleDeleteSuccess(data) {
+  console.log("Handling delete success with data:", data);
   if (data.message === "Book deleted successfully" || data.message === "Book restored successfully" || data.message === "Book marked as deleted") {
-    alert("Book deleted successfully!");
+    showToast("Book deleted successfully!", "success");
     fetchBooks(currentPage, sortSelect.value);
   } else {
-    alert("Error deleting book: " + (data.error || "Unknown error"));
+    showToast(`Error deleting book: ${data.error || "Unknown error"}`, "error");
   }
 }
 
@@ -405,7 +470,7 @@ function updateProfileUI() {
   }
 }
 
-// Cart Icon Click Functionality
+// Cart Icon Click rococoFunctionality
 function setupCartIconListener() {
   const cartIcon = document.getElementById("cartIcon");
   if (cartIcon) {

@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const submitButton = loginForm.querySelector(".login-btn");
   const togglePassword = document.querySelector(".toggle-password");
   const googleSignInBtn = document.getElementById("googleSignInBtn");
+  const githubSignInBtn = document.querySelector(".github-btn");
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|ask)\.[a-zA-Z]{2,}$/;
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!#%*?&])[A-Za-z\d@$!%#*?&]{8,}$/;
@@ -38,7 +39,35 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const GOOGLE_CLIENT_ID = window.env.GOOGLE_CLIENT_ID;
+  const GITHUB_CLIENT_ID = window.env.GITHUB_CLIENT_ID;
 
+  // GitHub Sign-In Handler with prompt=select_account and state
+  githubSignInBtn.addEventListener("click", function () {
+    const redirectUri = "http://localhost:5500/pages/callback.html";
+    const scope = "user:email";
+    const state = Math.random().toString(36).substring(2); // Random state for security
+    const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scope}&prompt=select_account&state=${state}`;
+    console.log("Redirecting to GitHub:", authUrl);
+    localStorage.setItem("github_state", state); // Store state for callback verification
+    window.location.href = authUrl; // Redirect to GitHub
+  });
+
+  // Logout Handler
+  function handleLogout() {
+    localStorage.clear(); // Clear app-specific storage
+    showToast("Logging out...", "info");
+    // Redirect to GitHub logout, then back to login page
+    window.location.href = "https://github.com/logout";
+    // Note: Manual navigation back to login.html is needed after GitHub logout
+  }
+
+  // Add logout button listener (adjust ID as per your HTML)
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", handleLogout);
+  }
+
+  // Google Sign-In Handler (unchanged)
   window.handleGoogleSignIn = function (response) {
     const idToken = response.credential;
     console.log("Google ID token received:", idToken);
@@ -69,16 +98,16 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("user_id", result.user_id);
         localStorage.setItem("user_name", result.user_name);
         localStorage.setItem("token", result.token);
-        localStorage.setItem("refresh_token", result.refresh_token); // Add refresh token
+        localStorage.setItem("refresh_token", result.refresh_token);
         localStorage.setItem("email", result.email);
         localStorage.setItem("mobile_number", result.mobile_number);
-        localStorage.setItem("role", result.role || "user"); // Default to "user" if role isn’t provided
+        localStorage.setItem("role", result.role || "user");
         console.log("Stored token:", result.token);
         console.log("Stored refresh_token:", result.refresh_token);
         showToast(result.message || "Login successful!", "success");
         setTimeout(() => {
           window.location.href = "bookStoreDashboard.html";
-        }, 1000); // Delay redirect to show toast
+        }, 1000);
       })
       .catch(error => {
         console.error("Google Sign-In error:", error.message);
@@ -192,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
         loginForm.reset();
         setTimeout(() => {
           window.location.href = "bookStoreDashboard.html";
-        }, 1000); // Delay redirect to show toast
+        }, 1000);
       } else {
         console.error("Normal login error response:", result);
         if (result.errors === "Email not registered.") {
