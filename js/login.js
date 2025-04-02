@@ -1,4 +1,3 @@
-// login.js (full updated code)
 document.addEventListener("DOMContentLoaded", function () {
   const loginForm = document.getElementById("loginForm");
   if (!loginForm) {
@@ -42,14 +41,31 @@ document.addEventListener("DOMContentLoaded", function () {
   const GOOGLE_CLIENT_ID = window.env.GOOGLE_CLIENT_ID;
   const GITHUB_CLIENT_ID = window.env.GITHUB_CLIENT_ID;
 
-  // GitHub Sign-In Handler
+  // GitHub Sign-In Handler with prompt=select_account and state
   githubSignInBtn.addEventListener("click", function () {
-    const redirectUri = "http://localhost:5500/pages/callback.html"; // Updated to callback.html
+    const redirectUri = "http://localhost:5500/pages/callback.html";
     const scope = "user:email";
-    const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scope}`;
+    const state = Math.random().toString(36).substring(2); // Random state for security
+    const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scope}&prompt=select_account&state=${state}`;
     console.log("Redirecting to GitHub:", authUrl);
+    localStorage.setItem("github_state", state); // Store state for callback verification
     window.location.href = authUrl; // Redirect to GitHub
   });
+
+  // Logout Handler
+  function handleLogout() {
+    localStorage.clear(); // Clear app-specific storage
+    showToast("Logging out...", "info");
+    // Redirect to GitHub logout, then back to login page
+    window.location.href = "https://github.com/logout";
+    // Note: Manual navigation back to login.html is needed after GitHub logout
+  }
+
+  // Add logout button listener (adjust ID as per your HTML)
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", handleLogout);
+  }
 
   // Google Sign-In Handler (unchanged)
   window.handleGoogleSignIn = function (response) {
