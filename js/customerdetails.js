@@ -59,6 +59,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelector(".bookstore-dash__logo").addEventListener("click", () => {
         window.location.href = "../pages/bookStoreDashboard.html";
     });
+
+    // Add geolocation trigger
+    setupGeolocation();
 });
 
 function showToast(message, type = 'success') {
@@ -482,8 +485,7 @@ async function loadCustomerDetails(userId) {
                 address_type: firstAddress.type
             }));
         } else {
-            alert("No address found. Please add an address before proceeding.");
-            return;
+            showToast("No saved address found. Use geolocation to fetch your current location?", 'info');
         }
 
         populateCustomerDetails(data.user, firstAddress);
@@ -655,6 +657,192 @@ function setupAddressModalListeners() {
             submitBtn.textContent = "Save Address";
         });
     }
+}
+
+// New Geolocation Functions
+function setupGeolocation() {
+    const geolocationBtn = document.createElement('button');
+    geolocationBtn.className = 'geolocation-btn';
+    geolocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Use My Location';
+    geolocationBtn.style.marginTop = '10px';
+
+    const customerDetailsSection = document.querySelector('.section');
+    if (!customerDetailsSection) {
+        return;
+    }
+
+    const firstFormGroup = customerDetailsSection.querySelector('.form-group:not(#addAddressModal .form-group)');
+    if (!firstFormGroup) {
+        customerDetailsSection.appendChild(geolocationBtn);
+    } else {
+        customerDetailsSection.insertBefore(geolocationBtn, firstFormGroup);
+    }
+
+    geolocationBtn.addEventListener('click', () => {
+        fetchGeolocation();
+    });
+
+    if (!localStorage.getItem('selected_address_id') && !customerDetailsSection.querySelector('.geolocation-btn')) {
+        fetchGeolocation();
+    }
+}
+
+async function fetchGeolocation() {
+    if (!navigator.geolocation) {
+        showToast("Geolocation is not supported by your browser.", 'error');
+        return;
+    }
+
+    showToast("Fetching your location...", 'info');
+
+    const MAX_ATTEMPTS = 3;
+    let attempt = 1;
+
+    while (attempt <= MAX_ATTEMPTS) {
+        try {
+            const position = await new Promise((resolve, reject) => {
+                const geoOptions = {
+                    timeout: 30000,
+                    enableHighAccuracy: false,
+                    maximumAge: 0
+                };
+                navigator.geolocation.getCurrentPosition(
+                    resolve,
+                    reject,
+                    geoOptions
+                );
+            });
+
+            const { latitude, longitude } = position.coords;
+            try {
+                const address = await reverseGeocode(latitude, longitude);
+
+                // Adjust street to meet minimum length requirement
+                let adjustedStreet = address.street || "";
+                if (adjustedStreet.length < 5) {
+                    adjustedStreet = adjustedStreet.padEnd(5, " ") + " Road";
+                }
+
+                const adjustedAddress = {
+                    street: adjustedStreet,
+                    city: address.city,
+                    state: address.state,
+                    zip_code: address.zip_code,
+                    country: address.country,
+                    type: "home",
+                    is_default: true,
+                    user_id: localStorage.getItem('user_id')
+                };
+
+                await addNewAddress(adjustedAddress);
+
+                showToast("Location fetched and saved successfully!", 'success');
+                return;
+            } catch (error) {
+                populateGeolocationAddress(address);
+                enableManualEntry();
+                showToast(`Failed to save location: ${error.message}. Please edit and save manually.`, 'error');
+                return;
+            }
+        } catch (error) {
+            let errorMessage = "Unable to retrieve your location.";
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = "Location access denied. Please allow permissions in your browser settings.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = `Location unavailable (Attempt ${attempt}/${MAX_ATTEMPTS}).`;
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = "Location request timed out.";
+                    break;
+                default:
+                    errorMessage = `Unknown error: ${error.message}`;
+            }
+
+            if (error.code === error.PERMISSION_DENIED) {
+                showToast(errorMessage, 'error');
+                enableManualEntry();
+                return;
+            } else if (attempt === MAX_ATTEMPTS) {
+                showToast("All attempts failed. Please enter your address manually.", 'error');
+                enableManualEntry();
+                return;
+            }
+            showToast(errorMessage, 'warning');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            attempt++;
+        }
+    }
+}
+
+function enableManualEntry() {
+    const fields = ['address-street', 'address-city', 'address-state'];
+    fields.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.removeAttribute('readonly');
+            element.style.backgroundColor = '#fff';
+            element.style.border = '1px solid #ccc';
+            element.placeholder = "Enter manually";
+        }
+    });
+    const typeRadios = document.getElementsByName('address-type');
+    typeRadios.forEach(radio => {
+        radio.disabled = false;
+        radio.checked = radio.value === 'Home';
+    });
+}
+
+async function reverseGeocode(lat, lon) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'BookstoreApp/1.0 (contact@example.com)'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error ${response.status}`);
+        }
+        const data = await response.json();
+        if (!data.address) {
+            throw new Error("No address found for these coordinates.");
+        }
+
+        return {
+            street: data.address.road || data.address.street || '',
+            city: data.address.city || data.address.town || data.address.village || '',
+            state: data.address.state || data.address.region || '',
+            zip_code: data.address.postcode || '',
+            country: data.address.country || '',
+            type: 'Home'
+        };
+    } catch (error) {
+        throw new Error(`Reverse geocoding failed: ${error.message}`);
+    }
+}
+
+function populateGeolocationAddress(address) {
+    document.getElementById('address-street').value = address.street;
+    document.getElementById('address-city').value = address.city;
+    document.getElementById('address-state').value = address.state;
+
+    const typeRadios = document.getElementsByName('address-type');
+    typeRadios.forEach(radio => {
+        radio.checked = radio.value === address.type;
+    });
+
+    const addressData = {
+        street: address.street,
+        city: address.city,
+        state: address.state,
+        zip_code: address.zip_code,
+        country: address.country,
+        type: address.type.toLowerCase(),
+        is_default: true
+    };
+    localStorage.setItem('selectedAddress', JSON.stringify(addressData));
 }
 
 updateProfileUI();
