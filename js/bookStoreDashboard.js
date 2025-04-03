@@ -50,7 +50,6 @@ async function refreshAccessToken() {
   if (!refreshToken) {
     localStorage.clear();
     updateProfileUI();
-    window.location.href = "../pages/login.html";
     return false;
   }
 
@@ -71,7 +70,6 @@ async function refreshAccessToken() {
   } catch (error) {
     localStorage.clear();
     updateProfileUI();
-    window.location.href = "../pages/login.html";
     return false;
   }
 }
@@ -153,13 +151,12 @@ async function fetchBooks(page = 1, sort = "relevance") {
       }
 
       const fallbackData = await fallbackResponse.json();
-      // Since json-server returns just the books array at /books, wrap it in the expected structure
       const mockData = {
         books: fallbackData,
         pagination: {
           current_page: page,
           per_page: perPage,
-          total_pages: 1, // Adjust based on your mock data
+          total_pages: 1,
           total_count: fallbackData.length
         }
       };
@@ -271,7 +268,6 @@ function handleBookGridClick(e) {
 async function deleteBook(bookId) {
   if (!token) {
     showToast("Please log in to delete a book.", "error");
-    window.location.href = "../pages/login.html";
     return;
   }
 
@@ -290,7 +286,7 @@ async function deleteBook(bookId) {
     if (response.status === 401) {
       const refreshed = await refreshAccessToken();
       if (!refreshed) {
-        showToast("Session expired. Please log in again.", "error");
+        showToast("Session expired.", "error");
         return;
       }
       const retryResponse = await fetch(`${BASE_URL}/api/v1/books/delete/${bookId}`, {
@@ -456,9 +452,13 @@ function updateProfileUI() {
     profileDropdown.querySelector(".bookstore-dash__orders").onclick = () => window.location.href = "../pages/bookOrders.html";
     profileDropdown.querySelector(".bookstore-dash__wishlist").onclick = () => window.location.href = "../pages/bookWishlist.html";
     profileDropdown.querySelector(".bookstore-dash__logout").onclick = () => {
-      localStorage.clear();
-      updateProfileUI();
-      window.location.href = "../pages/login.html";
+      localStorage.clear(); // Clear local storage
+      token = null; // Reset token
+      headers.Authorization = undefined; // Remove Authorization header
+      showToast("Logged out successfully!", "success"); // Show logout toast
+      updateProfileUI(); // Update UI to guest state
+      updateCartCount(0); // Reset cart count
+      fetchBooks(currentPage, sortSelect.value); // Refresh books (guest view)
     };
     if (role === "admin") {
       profileDropdown.querySelector(".bookstore-dash__profile-create-user").onclick = () => window.location.href = "../pages/admin_create.html";
@@ -470,7 +470,7 @@ function updateProfileUI() {
   }
 }
 
-// Cart Icon Click rococoFunctionality
+// Cart Icon Click Functionality
 function setupCartIconListener() {
   const cartIcon = document.getElementById("cartIcon");
   if (cartIcon) {
