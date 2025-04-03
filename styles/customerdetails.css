@@ -534,3 +534,19 @@ button[type="submit"]:disabled {
       font-size: 1.25rem;
   }
 }
+
+
+.geolocation-btn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.geolocation-btn:hover {
+  background-color: #45a049;
+}
