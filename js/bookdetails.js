@@ -58,8 +58,11 @@ async function refreshAccessToken() {
 }
 
 async function fetchBookDetails(bookId) {
+  const primaryUrl = `${BASE_URL}/api/v1/books/${bookId}`;
+  const fallbackUrl = `http://127.0.0.1:3001/books/${bookId}`; // Mock server URL
+
   try {
-    let response = await fetch(`${BASE_URL}/api/v1/books/${bookId}`, {
+    let response = await fetch(primaryUrl, {
       method: "GET",
       headers: headers,
     });
@@ -67,7 +70,7 @@ async function fetchBookDetails(bookId) {
     if (response.status === 401 && token) {
       const refreshed = await refreshAccessToken();
       if (refreshed) {
-        response = await fetch(`${BASE_URL}/api/v1/books/${bookId}`, {
+        response = await fetch(primaryUrl, {
           method: "GET",
           headers: headers,
         });
@@ -88,12 +91,43 @@ async function fetchBookDetails(bookId) {
     setupEditBookForm(data.book);
     checkWishlistStatus(bookId);
   } catch (error) {
-    bookTitle.textContent = "Error Loading Book";
-    bookDetails.textContent = `Error: ${error.message}`;
-    ratingValue.textContent = "N/A";
-    reviewCount.textContent = "(0)";
-    discountedPrice.textContent = "0.00";
-    mrp.textContent = "0.00";
+    console.warn("Primary backend failed, falling back to mock server:", error.message);
+    try {
+      const fallbackResponse = await fetch(fallbackUrl, {
+        method: "GET",
+      });
+
+      if (!fallbackResponse.ok) {
+        throw new Error(`Fallback error! Status: ${fallbackResponse.status}`);
+      }
+
+      const fallbackData = await fallbackResponse.json();
+      // Assuming mock server returns the book directly (adjust based on actual mock response)
+      const mockBook = {
+        id: fallbackData.id,
+        name: fallbackData.name,
+        author: fallbackData.author,
+        mrp: fallbackData.mrp,
+        discounted_price: fallbackData.discounted_price,
+        quantity: fallbackData.quantity,
+        book_details: fallbackData.book_details,
+        genre: fallbackData.genre,
+        book_image: fallbackData.book_image,
+        average_rating: fallbackData.average_rating || 0,
+        total_reviews: fallbackData.total_reviews || 0,
+      };
+
+      renderBookDetails(mockBook);
+      setupEditBookForm(mockBook);
+      checkWishlistStatus(bookId);
+    } catch (fallbackError) {
+      bookTitle.textContent = "Error Loading Book";
+      bookDetails.textContent = `Error: ${fallbackError.message}`;
+      ratingValue.textContent = "N/A";
+      reviewCount.textContent = "(0)";
+      discountedPrice.textContent = "0.00";
+      mrp.textContent = "0.00";
+    }
   }
 }
 
@@ -237,8 +271,11 @@ function renderBookDetails(book) {
 }
 
 async function fetchReviews(bookId) {
+  const primaryUrl = `${BASE_URL}/api/v1/reviews/${bookId}`;
+  const fallbackUrl = `http://127.0.0.1:3001/reviews?book_id=${bookId}`; // Mock server URL
+
   try {
-    let response = await fetch(`${BASE_URL}/api/v1/reviews/${bookId}`, {
+    let response = await fetch(primaryUrl, {
       method: "GET",
       headers: headers,
     });
@@ -246,7 +283,7 @@ async function fetchReviews(bookId) {
     if (response.status === 401 && token) {
       const refreshed = await refreshAccessToken();
       if (refreshed) {
-        response = await fetch(`${BASE_URL}/api/v1/reviews/${bookId}`, {
+        response = await fetch(primaryUrl, {
           method: "GET",
           headers: headers,
         });
@@ -269,7 +306,40 @@ async function fetchReviews(bookId) {
       reviewsContainer.innerHTML = "<p>No reviews available.</p>";
     }
   } catch (error) {
-    reviewsContainer.innerHTML = `<p>Error loading reviews: ${error.message}</p>`;
+    console.warn("Primary backend failed, falling back to mock server:", error.message);
+    try {
+      const fallbackResponse = await fetch(fallbackUrl, {
+        method: "GET",
+      });
+
+      if (!fallbackResponse.ok) {
+        throw new Error(`Fallback error! Status: ${fallbackResponse.status}`);
+      }
+
+      const fallbackData = await fallbackResponse.json();
+      // json-server returns an array of reviews; adapt to expected format
+      const total_reviews = fallbackData.length;
+      const average_rating = total_reviews > 0 
+        ? (fallbackData.reduce((sum, review) => sum + (review.rating || 0), 0) / total_reviews).toFixed(1) 
+        : 0;
+      const mockData = {
+        reviews: fallbackData,
+        total_reviews: total_reviews,
+        average_rating: average_rating
+      };
+
+      if (mockData.reviews && Array.isArray(mockData.reviews)) {
+        renderReviews(mockData.reviews);
+        reviewCount.textContent = `(${mockData.total_reviews || 0})`;
+        ratingValue.textContent = `${(mockData.average_rating || 0)} ★`;
+        updateRatingStars(mockData.average_rating || 0);
+
+      } else {
+        reviewsContainer.innerHTML = "<p>No reviews available from fallback.</p>";
+      }
+    } catch (fallbackError) {
+      reviewsContainer.innerHTML = `<p>Error loading reviews: ${fallbackError.message}</p>`;
+    }
   }
 }
 

@@ -166,7 +166,7 @@ async function fetchBooks(page = 1, sort = "relevance") {
       renderBooks(mockData.books);
       renderPagination(mockData.pagination);
       totalItems.textContent = mockData.pagination.total_count;
-      showToast("Using fallback data due to backend unavailability", "warning");
+      // showToast("Using fallback data due to backend unavailability", "warning");
     } catch (fallbackError) {
       if (fallbackError.name === "AbortError") return;
       bookGrid.innerHTML = `<p class="error-message">Error: ${fallbackError.message}</p>`;
