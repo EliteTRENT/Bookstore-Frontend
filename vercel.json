@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/pages/bookStoreDashboard.html"
+      "destination": "/pages/login.html"
     }
   ]
 }
