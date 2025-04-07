@@ -1,4 +1,9 @@
 // bookStoreDashboard.js
+if (!window.env || !window.env.BACKEND_URL) {
+  console.error("Environment variables not loaded. Ensure env.js is included before this script.");
+  throw new Error("BACKEND_URL is not defined. Check env.js loading.");
+}
+
 // Constants
 const bookGrid = document.getElementById("bookGrid");
 const prevPageBtn = document.getElementById("prevPage");
@@ -10,7 +15,6 @@ const sortSelect = document.getElementById("sortSelect");
 
 let currentPage = 1;
 const perPage = 12;
-const BASE_URL = "http://127.0.0.1:3000";
 
 let debounceTimeout = null;
 let abortController = null;
@@ -54,7 +58,7 @@ async function refreshAccessToken() {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/sessions/refresh`, {
+    const response = await fetch(`${window.env.BACKEND_URL}/api/v1/sessions/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh_token: refreshToken })
@@ -82,11 +86,11 @@ async function fetchCartCount() {
   }
 
   try {
-    let response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, { method: "GET", headers });
+    let response = await fetch(`${window.env.BACKEND_URL}/api/v1/carts/${userId}`, { method: "GET", headers });
     if (response.status === 401) {
       const refreshed = await refreshAccessToken();
       if (!refreshed) return;
-      response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, { method: "GET", headers });
+      response = await fetch(`${window.env.BACKEND_URL}/api/v1/carts/${userId}`, { method: "GET", headers });
     }
 
     if (!response.ok) throw new Error(`Error ${response.status}: Failed to fetch cart items`);
@@ -113,7 +117,7 @@ async function fetchBooks(page = 1, sort = "relevance") {
   if (abortController) abortController.abort();
   abortController = new AbortController();
 
-  let url = `${BASE_URL}/api/v1/books?page=${page}&per_page=${perPage}`;
+  let url = `${window.env.BACKEND_URL}/api/v1/books?page=${page}&per_page=${perPage}`;
   if (sort && sort !== "relevance") url += `&sort_by=${encodeURIComponent(sort)}`;
   const fallbackUrl = `http://127.0.0.1:3001/books?page=${page}&per_page=${perPage}`;
 
@@ -182,7 +186,7 @@ async function searchBooks(query) {
   }
 
   try {
-    let response = await fetch(`${BASE_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
+    let response = await fetch(`${window.env.BACKEND_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
       method: "GET",
       headers,
       signal: abortController.signal
@@ -191,7 +195,7 @@ async function searchBooks(query) {
     if (response.status === 401 && token) {
       const refreshed = await refreshAccessToken();
       if (!refreshed) return;
-      response = await fetch(`${BASE_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
+      response = await fetch(`${window.env.BACKEND_URL}/api/v1/books/search_suggestions?query=${encodeURIComponent(query)}`, {
         method: "GET",
         headers,
         signal: abortController.signal
@@ -275,7 +279,7 @@ async function deleteBook(bookId) {
 
   try {
     console.log(`Attempting to delete book with ID: ${bookId}`);
-    const response = await fetch(`${BASE_URL}/api/v1/books/delete/${bookId}`, {
+    const response = await fetch(`${window.env.BACKEND_URL}/api/v1/books/delete/${bookId}`, {
       method: "PATCH",
       headers
     });
@@ -289,7 +293,7 @@ async function deleteBook(bookId) {
         showToast("Session expired.", "error");
         return;
       }
-      const retryResponse = await fetch(`${BASE_URL}/api/v1/books/delete/${bookId}`, {
+      const retryResponse = await fetch(`${window.env.BACKEND_URL}/api/v1/books/delete/${bookId}`, {
         method: "PATCH",
         headers
       });

@@ -1,4 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // Check if window.env is loaded
+  if (!window.env || !window.env.BACKEND_URL) {
+    console.error("Environment variables not loaded. Ensure env.js is included before this script.");
+    throw new Error("BACKEND_URL is not defined. Check env.js loading.");
+  }
+
   const loginForm = document.getElementById("loginForm");
   if (!loginForm) {
     console.log("Login form not found in DOM");
@@ -43,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // GitHub Sign-In Handler with prompt=select_account and state
   githubSignInBtn.addEventListener("click", function () {
-    const redirectUri = "http://localhost:5500/pages/callback.html";
+    const redirectUri = "http://localhost:5500/pages/callback.html"; // Update this for production if needed
     const scope = "user:email";
     const state = Math.random().toString(36).substring(2); // Random state for security
     const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scope}&prompt=select_account&state=${state}`;
@@ -67,11 +73,11 @@ document.addEventListener("DOMContentLoaded", function () {
     logoutBtn.addEventListener("click", handleLogout);
   }
 
-  // Google Sign-In Handler (unchanged)
+  // Google Sign-In Handler
   window.handleGoogleSignIn = function (response) {
     const idToken = response.credential;
     console.log("Google ID token received:", idToken);
-    fetch("http://localhost:3000/api/v1/google_auth", {
+    fetch(`${window.env.BACKEND_URL}/api/v1/google_auth`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -194,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
     submitButton.textContent = "Logging in...";
 
     try {
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${window.env.BACKEND_URL}/api/v1/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
