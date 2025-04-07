@@ -1,4 +1,8 @@
-const BASE_URL = "http://127.0.0.1:3000";
+// Check if window.env is loaded
+if (!window.env || !window.env.BACKEND_URL) {
+  console.error("Environment variables not loaded. Ensure env.js is included before this script.");
+  throw new Error("BACKEND_URL is not defined. Check env.js loading.");
+}
 
 const urlParams = new URLSearchParams(window.location.search);
 const bookId = urlParams.get("bookId");
@@ -33,7 +37,7 @@ async function refreshAccessToken() {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/sessions/refresh`, {
+    const response = await fetch(`${window.env.BACKEND_URL}/api/v1/sessions/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh_token: refreshToken })
@@ -58,7 +62,7 @@ async function refreshAccessToken() {
 }
 
 async function fetchBookDetails(bookId) {
-  const primaryUrl = `${BASE_URL}/api/v1/books/${bookId}`;
+  const primaryUrl = `${window.env.BACKEND_URL}/api/v1/books/${bookId}`;
   const fallbackUrl = `http://127.0.0.1:3001/books/${bookId}`; // Mock server URL
 
   try {
@@ -177,7 +181,7 @@ function setupEditBookForm(book) {
         },
       };
 
-      fetch(`${BASE_URL}/api/v1/books/${bookId}`, {
+      fetch(`${window.env.BACKEND_URL}/api/v1/books/${bookId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -271,7 +275,7 @@ function renderBookDetails(book) {
 }
 
 async function fetchReviews(bookId) {
-  const primaryUrl = `${BASE_URL}/api/v1/reviews/${bookId}`;
+  const primaryUrl = `${window.env.BACKEND_URL}/api/v1/reviews/${bookId}`;
   const fallbackUrl = `http://127.0.0.1:3001/reviews?book_id=${bookId}`; // Mock server URL
 
   try {
@@ -333,7 +337,6 @@ async function fetchReviews(bookId) {
         reviewCount.textContent = `(${mockData.total_reviews || 0})`;
         ratingValue.textContent = `${(mockData.average_rating || 0)} ★`;
         updateRatingStars(mockData.average_rating || 0);
-
       } else {
         reviewsContainer.innerHTML = "<p>No reviews available from fallback.</p>";
       }
@@ -415,7 +418,7 @@ async function deleteReview(reviewId) {
 
   if (confirm("Are you sure you want to delete this review?")) {
     try {
-      let response = await fetch(`${BASE_URL}/api/v1/reviews/${reviewId}`, {
+      let response = await fetch(`${window.env.BACKEND_URL}/api/v1/reviews/${reviewId}`, {
         method: "DELETE",
         headers: headers,
         body: JSON.stringify({ user_id: userId })
@@ -424,7 +427,7 @@ async function deleteReview(reviewId) {
       if (response.status === 401 && token) {
         const refreshed = await refreshAccessToken();
         if (refreshed) {
-          response = await fetch(`${BASE_URL}/api/v1/reviews/${reviewId}`, {
+          response = await fetch(`${window.env.BACKEND_URL}/api/v1/reviews/${reviewId}`, {
             method: "DELETE",
             headers: headers,
             body: JSON.stringify({ user_id: userId })
@@ -461,7 +464,7 @@ async function checkWishlistStatus(bookId) {
   }
 
   try {
-    let response = await fetch(`${BASE_URL}/api/v1/wishlists`, {
+    let response = await fetch(`${window.env.BACKEND_URL}/api/v1/wishlists`, {
       method: "GET",
       headers: headers,
     });
@@ -469,7 +472,7 @@ async function checkWishlistStatus(bookId) {
     if (response.status === 401 && token) {
       const refreshed = await refreshAccessToken();
       if (refreshed) {
-        response = await fetch(`${BASE_URL}/api/v1/wishlists`, {
+        response = await fetch(`${window.env.BACKEND_URL}/api/v1/wishlists`, {
           method: "GET",
           headers: headers,
         });
@@ -533,7 +536,7 @@ async function addToWishlist(bookId) {
   const wishlistData = { wishlist: { book_id: parseInt(bookId) } };
 
   try {
-    let response = await fetch(`${BASE_URL}/api/v1/wishlists`, {
+    let response = await fetch(`${window.env.BACKEND_URL}/api/v1/wishlists`, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(wishlistData),
@@ -542,7 +545,7 @@ async function addToWishlist(bookId) {
     if (response.status === 401 && token) {
       const refreshed = await refreshAccessToken();
       if (refreshed) {
-        response = await fetch(`${BASE_URL}/api/v1/wishlists`, {
+        response = await fetch(`${window.env.BACKEND_URL}/api/v1/wishlists`, {
           method: "POST",
           headers: headers,
           body: JSON.stringify(wishlistData),
@@ -562,7 +565,7 @@ async function addToWishlist(bookId) {
       alert("Book added to wishlist!");
       wishlistBtn.querySelector(".wishlist-icon").classList.add("filled");
       wishlistBtn.dataset.inWishlist = "true";
-      const wishlistResponse = await fetch(`${BASE_URL}/api/v1/wishlists`, { method: "GET", headers });
+      const wishlistResponse = await fetch(`${window.env.BACKEND_URL}/api/v1/wishlists`, { method: "GET", headers });
       const wishlistData = await wishlistResponse.json();
       const wishlistItem = wishlistData.message.find(
         (item) => item.book && item.book.id === parseInt(bookId) && !item.is_deleted
@@ -583,7 +586,7 @@ async function addToWishlist(bookId) {
 
 async function removeFromWishlist(wishlistId) {
   try {
-    let response = await fetch(`${BASE_URL}/api/v1/wishlists/${wishlistId}`, {
+    let response = await fetch(`${window.env.BACKEND_URL}/api/v1/wishlists/${wishlistId}`, {
       method: "PATCH",
       headers: headers,
     });
@@ -591,7 +594,7 @@ async function removeFromWishlist(wishlistId) {
     if (response.status === 401 && token) {
       const refreshed = await refreshAccessToken();
       if (refreshed) {
-        response = await fetch(`${BASE_URL}/api/v1/wishlists/${wishlistId}`, {
+        response = await fetch(`${window.env.BACKEND_URL}/api/v1/wishlists/${wishlistId}`, {
           method: "PATCH",
           headers: headers,
         });
@@ -626,7 +629,7 @@ async function fetchCartCount() {
   }
 
   try {
-    let response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+    let response = await fetch(`${window.env.BACKEND_URL}/api/v1/carts/${userId}`, {
       method: "GET",
       headers: headers,
     });
@@ -634,7 +637,7 @@ async function fetchCartCount() {
     if (response.status === 401 && token) {
       const refreshed = await refreshAccessToken();
       if (refreshed) {
-        response = await fetch(`${BASE_URL}/api/v1/carts/${userId}`, {
+        response = await fetch(`${window.env.BACKEND_URL}/api/v1/carts/${userId}`, {
           method: "GET",
           headers: headers,
         });
@@ -767,7 +770,7 @@ function setupEventListeners() {
       const cartData = { cart: { user_id: parseInt(userId), book_id: parseInt(bookId), quantity: parseInt(quantityInput.value) || 1 } };
 
       try {
-        let response = await fetch(`${BASE_URL}/api/v1/carts`, {
+        let response = await fetch(`${window.env.BACKEND_URL}/api/v1/carts`, {
           method: "POST",
           headers: headers,
           body: JSON.stringify(cartData)
@@ -776,7 +779,7 @@ function setupEventListeners() {
         if (response.status === 401 && token) {
           const refreshed = await refreshAccessToken();
           if (refreshed) {
-            response = await fetch(`${BASE_URL}/api/v1/carts`, {
+            response = await fetch(`${window.env.BACKEND_URL}/api/v1/carts`, {
               method: "POST",
               headers: headers,
               body: JSON.stringify(cartData)
@@ -820,7 +823,7 @@ function setupEventListeners() {
 
     if (newQuantity <= 0) {
       try {
-        let response = await fetch(`${BASE_URL}/api/v1/carts/${bookId}`, {
+        let response = await fetch(`${window.env.BACKEND_URL}/api/v1/carts/${bookId}`, {
           method: "DELETE",
           headers: headers
         });
@@ -828,7 +831,7 @@ function setupEventListeners() {
         if (response.status === 401 && token) {
           const refreshed = await refreshAccessToken();
           if (refreshed) {
-            response = await fetch(`${BASE_URL}/api/v1/carts/${bookId}`, {
+            response = await fetch(`${window.env.BACKEND_URL}/api/v1/carts/${bookId}`, {
               method: "DELETE",
               headers: headers
             });
@@ -854,7 +857,7 @@ function setupEventListeners() {
 
     const cartData = { cart: { book_id: parseInt(bookId), quantity: newQuantity } };
     try {
-      let response = await fetch(`${BASE_URL}/api/v1/carts`, {
+      let response = await fetch(`${window.env.BACKEND_URL}/api/v1/carts`, {
         method: "PATCH",
         headers: headers,
         body: JSON.stringify(cartData)
@@ -863,7 +866,7 @@ function setupEventListeners() {
       if (response.status === 401 && token) {
         const refreshed = await refreshAccessToken();
         if (refreshed) {
-          response = await fetch(`${BASE_URL}/api/v1/carts`, {
+          response = await fetch(`${window.env.BACKEND_URL}/api/v1/carts`, {
             method: "PATCH",
             headers: headers,
             body: JSON.stringify(cartData)
@@ -920,7 +923,7 @@ function setupEventListeners() {
       };
 
       try {
-        let response = await fetch(`${BASE_URL}/api/v1/reviews`, {
+        let response = await fetch(`${window.env.BACKEND_URL}/api/v1/reviews`, {
           method: "POST",
           headers: headers,
           body: JSON.stringify(reviewData),
@@ -929,7 +932,7 @@ function setupEventListeners() {
         if (response.status === 401 && token) {
           const refreshed = await refreshAccessToken();
           if (refreshed) {
-            response = await fetch(`${BASE_URL}/api/v1/reviews`, {
+            response = await fetch(`${window.env.BACKEND_URL}/api/v1/reviews`, {
               method: "POST",
               headers: headers,
               body: JSON.stringify(reviewData),

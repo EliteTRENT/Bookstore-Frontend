@@ -1,4 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // Check if window.env is loaded
+  if (!window.env || !window.env.BACKEND_URL) {
+    console.error("Environment variables not loaded. Ensure env.js is included before this script.");
+    throw new Error("BACKEND_URL is not defined. Check env.js loading.");
+  }
+
   const signupForm = document.getElementById("signupForm");
   if (!signupForm) {
     console.log("Signup form not found in DOM");
@@ -96,7 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
     submitButton.textContent = "Signing up...";
 
     try {
-      const response = await fetch("http://localhost:3000/api/v1/users", {
+      const response = await fetch(`${window.env.BACKEND_URL}/api/v1/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

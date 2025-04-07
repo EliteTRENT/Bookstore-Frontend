@@ -1,4 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // Check if window.env is loaded
+  if (!window.env || !window.env.BACKEND_URL) {
+    console.error("Environment variables not loaded. Ensure env.js is included before this script.");
+    throw new Error("BACKEND_URL is not defined. Check env.js loading.");
+  }
+
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
   if (role !== "admin" || !token) {
@@ -79,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     try {
       console.log("Token:", token); // Debug token
-      const response = await fetch("http://localhost:3000/api/v1/users", {
+      const response = await fetch(`${window.env.BACKEND_URL}/api/v1/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
