@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // GitHub Sign-In Handler with prompt=select_account and state
   githubSignInBtn.addEventListener("click", function () {
-    const redirectUri = "http://localhost:5500/pages/callback.html"; // Update this for production if needed
+    const redirectUri = "https://bookstoreapp-rho.vercel.app/pages/callback.html"; // Update this for production if needed
     const scope = "user:email";
     const state = Math.random().toString(36).substring(2); // Random state for security
     const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scope}&prompt=select_account&state=${state}`;
